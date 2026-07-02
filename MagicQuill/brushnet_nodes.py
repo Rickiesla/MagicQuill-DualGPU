@@ -765,7 +765,7 @@ def cut_with_mask(mask, width, height):
 
 
 # Prepare conditioning_latents
-@torch.inference_mode()
+@torch.no_grad()
 def get_image_latents(masked_image, mask, vae, scaling_factor):
     processed_image = masked_image.to(vae.device)
     image_latents = vae.encode(processed_image[:,:,:,:3]) * scaling_factor
@@ -787,7 +787,7 @@ def get_image_latents(masked_image, mask, vae, scaling_factor):
 
 
 # Main function where magic happens
-@torch.inference_mode()
+@torch.no_grad()
 def brushnet_inference(x, timesteps, transformer_options, debug):
     if 'model_patch' not in transformer_options:
         print('BrushNet inference: there is no model_patch key in transformer_options')
@@ -979,7 +979,7 @@ def add_brushnet_patch(model, brushnet, torch_dtype, conditioning_latents,
     is_SDXL = isinstance(model.model.model_config, comfy.supported_models.SDXL)
 
     if is_SDXL:
-        input_blocks = [[0, comfy.ops.manual_cast.Conv2d],
+        input_blocks = [[0, torch.nn.Conv2d],
                         [1, comfy.ldm.modules.diffusionmodules.openaimodel.ResBlock],
                         [2, comfy.ldm.modules.diffusionmodules.openaimodel.ResBlock],
                         [3, comfy.ldm.modules.diffusionmodules.openaimodel.Downsample],
@@ -1001,7 +1001,7 @@ def add_brushnet_patch(model, brushnet, torch_dtype, conditioning_latents,
                         [7, comfy.ldm.modules.diffusionmodules.openaimodel.ResBlock],
                         [8, comfy.ldm.modules.diffusionmodules.openaimodel.ResBlock]]
     else:
-        input_blocks = [[0, comfy.ops.manual_cast.Conv2d],
+        input_blocks = [[0, torch.nn.Conv2d],
                         [1, comfy.ldm.modules.attention.SpatialTransformer],
                         [2, comfy.ldm.modules.attention.SpatialTransformer],
                         [3, comfy.ldm.modules.diffusionmodules.openaimodel.Downsample],
@@ -1031,13 +1031,11 @@ def add_brushnet_patch(model, brushnet, torch_dtype, conditioning_latents,
                         [11, comfy.ldm.modules.attention.SpatialTransformer]]
 
     def last_layer_index(block, tp):
-        layer_list = []
-        for layer in block:
-            layer_list.append(type(layer))
-        layer_list.reverse()
-        if tp not in layer_list:
-            return -1, layer_list.reverse()
-        return len(layer_list) - 1 - layer_list.index(tp), layer_list
+        idx = -1
+        for i, layer in enumerate(block):
+            if isinstance(layer, tp):
+                idx = i
+        return idx, block
 
     def brushnet_forward(model, x, timesteps, transformer_options, control):
         if 'brushnet' not in transformer_options['model_patch']:
@@ -1093,7 +1091,10 @@ def add_brushnet_patch(model, brushnet, torch_dtype, conditioning_latents,
             if torch.is_tensor(to_add):
                 # interpolate due to RAUNet
                 if h.shape[2] != to_add.shape[2] or h.shape[3] != to_add.shape[3]:
-                    to_add = torch.nn.functional.interpolate(to_add, size=(h.shape[2], h.shape[3]), mode='bicubic')                  
+                    to_add = torch.nn.functional.interpolate(to_add, size=(h.shape[2], h.shape[3]), mode='bicubic')
+                # align channels for DirectML manual_cast compatibility
+                if h.shape[1] != to_add.shape[1]:
+                    to_add = to_add.mean(dim=1, keepdim=True).expand(-1, h.shape[1], -1, -1) if to_add.shape[1] > 1 else to_add.expand(-1, h.shape[1], -1, -1)
                 h += to_add.to(h.dtype).to(h.device)
             else:
                 h += self.add_sample_after

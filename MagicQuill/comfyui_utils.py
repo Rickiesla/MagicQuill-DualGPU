@@ -155,7 +155,7 @@ class KSampler:
 
 class VAEDecode:
     def decode(self, vae, samples):
-        return (vae.decode(samples["samples"]), )
+        return (vae.decode(samples["samples"].cpu()), )
 
 class ColorDetector:
     def __call__(self, input_image=None, detect_resolution=2048, output_type=None, **kwargs):

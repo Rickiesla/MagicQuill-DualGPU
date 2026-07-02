@@ -30,7 +30,7 @@ import time
 import io
 
 AUTO_SAVE = False
-RES = 512
+RES = 384
 
 # LLaVA (Draw and Guess) is disabled by default on AMD/DirectML because LLaVA-7B
 # in fp32 consumes ~28GB RAM and crashes the process on systems with 32GB RAM.
