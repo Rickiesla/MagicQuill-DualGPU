@@ -8,6 +8,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from .brushnet_nodes import BrushNetLoader, BrushNet, BlendInpaint, get_files_with_extension
 from .comfyui_utils import CheckpointLoaderSimple, ControlNetLoader, ControlNetApplyAdvanced, CLIPTextEncode, KSampler, VAEDecode, GrowMask, PIDINET_Preprocessor, LineArt_Preprocessor, Color_Preprocessor
+import comfy.model_management as model_management
 
 class ScribbleColorEditModel():
     def __init__(self):
@@ -25,9 +26,13 @@ class ScribbleColorEditModel():
         self.vae_decoder = VAEDecode()
         self.blender = BlendInpaint()
         self.ckpt_name = os.path.join("SD1.5", "realisticVisionV60B1_v51VAE.safetensors")
+        # Detect DirectML (AMD GPU): fp16 is unstable on Polaris GPUs, use fp32 instead
+        self.dtype = 'float32' if model_management.directml_enabled else 'float16'
+        if model_management.directml_enabled:
+            print("[MagicQuill] DirectML detected: using float32 for BrushNet (fp16 unstable on AMD Polaris)")
         with torch.no_grad():
             self.model, self.clip, self.vae = self.checkpoint_loader.load_checkpoint(self.ckpt_name)
-        self.load_models('SD1.5', 'float16')
+        self.load_models('SD1.5', self.dtype)
 
     def load_models(self, base_model_version="SD1.5", dtype='float16'):
         if base_model_version == "SD1.5":

@@ -191,9 +191,12 @@ if args.cpu_vae:
 
 
 if ENABLE_PYTORCH_ATTENTION:
-    torch.backends.cuda.enable_math_sdp(True)
-    torch.backends.cuda.enable_flash_sdp(True)
-    torch.backends.cuda.enable_mem_efficient_sdp(True)
+    try:
+        torch.backends.cuda.enable_math_sdp(True)
+        torch.backends.cuda.enable_flash_sdp(True)
+        torch.backends.cuda.enable_mem_efficient_sdp(True)
+    except AttributeError:
+        pass  # CUDA backends not available (e.g., DirectML/AMD or CPU-only PyTorch)
 
 if args.lowvram:
     set_vram_to = VRAMState.LOW_VRAM
@@ -202,6 +205,12 @@ elif args.novram:
     set_vram_to = VRAMState.NO_VRAM
 elif args.highvram or args.gpu_only:
     vram_state = VRAMState.HIGH_VRAM
+
+# Force LOW_VRAM mode when using DirectML (AMD GPUs like RX 580)
+if directml_enabled:
+    set_vram_to = VRAMState.LOW_VRAM
+    lowvram_available = True  # Re-enable lowvram for DirectML (disabled by default above)
+    logging.info("DirectML detected: forcing LOW_VRAM mode for better memory management.")
 
 FORCE_FP32 = False
 FORCE_FP16 = False
@@ -524,6 +533,10 @@ def unet_inital_load_device(parameters, dtype):
         return cpu_dev
 
 def unet_dtype(device=None, model_params=0, supported_dtypes=[torch.float16, torch.bfloat16, torch.float32]):
+    # DirectML (AMD Polaris like RX 580) does not support FP8 — aborts with
+    # "[F dml_util.cc:118] Invalid or unsupported data type Float8_e4m3fn".
+    if directml_enabled:
+        return torch.float32
     if args.bf16_unet:
         return torch.bfloat16
     if args.fp16_unet:
@@ -579,6 +592,9 @@ def text_encoder_device():
         return torch.device("cpu")
 
 def text_encoder_dtype(device=None):
+    # DirectML (AMD Polaris) does not support FP8
+    if directml_enabled:
+        return torch.float32
     if args.fp8_e4m3fn_text_enc:
         return torch.float8_e4m3fn
     elif args.fp8_e5m2_text_enc:

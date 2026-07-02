@@ -76,7 +76,9 @@ class BrushNetLoader:
         else:
             raise Exception("Unknown BrushNet model")
 
-        with init_empty_weights():
+        if comfy.model_management.directml_enabled:
+            # DirectML path: create the model normally (NOT with init_empty_weights,
+            # which creates meta tensors that load_state_dict cannot fill).
             if is_SDXL:
                 brushnet_config = BrushNetModel.load_config(brushnet_xl_config_file)
                 brushnet_model = BrushNetModel.from_config(brushnet_config)
@@ -87,30 +89,55 @@ class BrushNetLoader:
                 brushnet_config = BrushNetModel.load_config(brushnet_config_file)
                 brushnet_model = BrushNetModel.from_config(brushnet_config)
 
-        if is_PP:
-            print("PowerPaint model file:", brushnet_file)
-        else:
-            print("BrushNet model file:", brushnet_file)
+            # Determine torch dtype (accelerate does not support DirectML devices)
+            if dtype == 'float16':
+                torch_dtype = torch.float16
+            elif dtype == 'bfloat16':
+                torch_dtype = torch.bfloat16
+            elif dtype == 'float32':
+                torch_dtype = torch.float32
+            else:
+                torch_dtype = torch.float64
 
-        if dtype == 'float16':
-            torch_dtype = torch.float16
-        elif dtype == 'bfloat16':
-            torch_dtype = torch.bfloat16
-        elif dtype == 'float32':
-            torch_dtype = torch.float32
+            # Fall back to a standard PyTorch load.
+            sd = comfy.utils.load_torch_file(brushnet_file)
+            brushnet_model.load_state_dict(sd, strict=False)
+            del sd
+            brushnet_model = brushnet_model.to(torch_dtype)
+            # Keep BrushNet on CPU when using DirectML (moving to DirectML causes segfault
+            # with fp32 models on RX 580; the model will be moved to device during inference
+            # via comfy.model_management's load_model_gpu).
+            print("BrushNet loaded on CPU (DirectML mode, fp32)")
         else:
-            torch_dtype = torch.float64
+            if dtype == 'float16':
+                torch_dtype = torch.float16
+            elif dtype == 'bfloat16':
+                torch_dtype = torch.bfloat16
+            elif dtype == 'float32':
+                torch_dtype = torch.float32
+            else:
+                torch_dtype = torch.float64
 
-        brushnet_model = load_checkpoint_and_dispatch(
-            brushnet_model,
-            brushnet_file,
-            device_map="sequential",
-            max_memory=None,
-            offload_folder=None,
-            offload_state_dict=False,
-            dtype=torch_dtype,
-            force_hooks=False,
-        )
+            with init_empty_weights():
+                if is_SDXL:
+                    brushnet_config = BrushNetModel.load_config(brushnet_xl_config_file)
+                    brushnet_model = BrushNetModel.from_config(brushnet_config)
+                elif is_PP:
+                    brushnet_config = PowerPaintModel.load_config(powerpaint_config_file)
+                    brushnet_model = PowerPaintModel.from_config(brushnet_config)
+                else:
+                    brushnet_config = BrushNetModel.load_config(brushnet_config_file)
+                    brushnet_model = BrushNetModel.from_config(brushnet_config)
+            brushnet_model = load_checkpoint_and_dispatch(
+                brushnet_model,
+                brushnet_file,
+                device_map="sequential",
+                max_memory=None,
+                offload_folder=None,
+                offload_state_dict=False,
+                dtype=torch_dtype,
+                force_hooks=False,
+            )
 
         if is_PP: 
             print("PowerPaint model is loaded")

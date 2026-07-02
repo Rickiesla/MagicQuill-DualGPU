@@ -19,16 +19,37 @@ from llava.constants import (
 )
 import re
 
+# Device for LLaVA: use CPU by default (compatible with DirectML/AMD setups)
+# LLaVA-7B requires ~14GB in fp16, so it cannot fit in 8GB VRAM without CUDA+bitsandbytes
+LLAVA_DEVICE = "cpu"
+
 class LLaVAModel:
     def __init__(self):
         current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         model_path = os.path.join(current_dir, "models", "llava-v1.5-7b-finetune-clean")
-        self.tokenizer, self.model, self.image_processor, self.context_len = load_pretrained_model(
-            model_path=model_path,
-            model_base=None,
-            model_name=get_model_name_from_path(model_path),
-            load_4bit=True
-        )
+        # Load without 4-bit quantization (bitsandbytes requires CUDA).
+        # On 8GB VRAM, LLaVA-7B runs on CPU instead.
+        try:
+            self.tokenizer, self.model, self.image_processor, self.context_len = load_pretrained_model(
+                model_path=model_path,
+                model_base=None,
+                model_name=get_model_name_from_path(model_path),
+                load_4bit=False,
+                load_8bit=False,
+                device=LLAVA_DEVICE,
+            )
+            # Convert ALL weights to float32 (including mm_projector and vision_tower)
+            # to avoid "mat1 and mat2 must have the same dtype" errors on CPU.
+            self.model = self.model.float()
+            self.model.eval()
+            print("[LLaVA] Model loaded on CPU (fp32). Draw and Guess is enabled.")
+        except Exception as e:
+            print(f"[LLaVA] Failed to load model: {e}")
+            print("[LLaVA] Draw and Guess will be DISABLED. Type prompts manually.")
+            self.tokenizer = None
+            self.model = None
+            self.image_processor = None
+            self.context_len = None
 
     def generate_description(self, images, question):
         qs = question
@@ -53,7 +74,11 @@ class LLaVAModel:
             image_sizes.append(image.size)
             image = expand2square(image, tuple(int(x) for x in self.image_processor.image_mean))
             image = self.image_processor.preprocess(image, return_tensors='pt')['pixel_values'][0]
-            images_tensor.append(image.half())
+            # Use float32 on CPU (fp16 on CPU is unsupported/very slow)
+            if LLAVA_DEVICE == "cpu":
+                images_tensor.append(image.float())
+            else:
+                images_tensor.append(image.half())
 
         conv = conv_templates["llava_v1"].copy()
         conv.append_message(conv.roles[0], qs)
@@ -63,7 +88,7 @@ class LLaVAModel:
         input_ids = (
             tokenizer_image_token(prompt, self.tokenizer, IMAGE_TOKEN_INDEX, return_tensors="pt")
             .unsqueeze(0)
-            .cuda()
+            .to(self.model.device)
         )
 
         with torch.inference_mode():
@@ -81,6 +106,8 @@ class LLaVAModel:
         return outputs
 
     def process(self, image, colored_image, add_mask):
+        if self.model is None:
+            return ("", "", "")  # LLaVA not loaded, skip Draw and Guess
         description = ""
         answer1 = ""
         answer2 = ""

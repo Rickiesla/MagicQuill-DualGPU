@@ -1,7 +1,7 @@
 import subprocess
 import os
+import sys
 import gradio as gr
-import os
 from gradio_magicquill import MagicQuill
 import random
 import torch
@@ -12,6 +12,17 @@ import io
 from fastapi import FastAPI, Request
 import uvicorn
 import requests
+
+# --- DirectML / AMD GPU support ---
+# Enables --directml flag for AMD GPUs (e.g., RX 580) on Windows.
+# Set USE_DIRECTML=1 in environment to activate, or set AMD_GPU=1.
+USE_DIRECTML = os.environ.get("USE_DIRECTML", os.environ.get("AMD_GPU", "0")) == "1"
+if USE_DIRECTML:
+    sys.argv = ["gradio_run.py", "--directml"]
+    print("[MagicQuill] DirectML enabled for AMD GPU support.")
+else:
+    print("[MagicQuill] Running in default CUDA mode. Set USE_DIRECTML=1 to enable AMD GPU via DirectML.")
+
 from MagicQuill import folder_paths
 from MagicQuill.llava_new import LLaVAModel
 from MagicQuill.scribble_color_edit import ScribbleColorEditModel
@@ -21,7 +32,16 @@ import io
 AUTO_SAVE = False
 RES = 512
 
-llavaModel = LLaVAModel()
+# LLaVA (Draw and Guess) is disabled by default on AMD/DirectML because LLaVA-7B
+# in fp32 consumes ~28GB RAM and crashes the process on systems with 32GB RAM.
+# Set ENABLE_LLAVA=1 to re-enable it. Without it, you type prompts manually.
+ENABLE_LLAVA = os.environ.get("ENABLE_LLAVA", "0") == "1"
+if ENABLE_LLAVA:
+    llavaModel = LLaVAModel()
+else:
+    llavaModel = None
+    print("[MagicQuill] LLaVA (Draw and Guess) DISABLED. Type prompts manually.")
+    print("[MagicQuill] To enable it: set ENABLE_LLAVA=1 (needs ~28GB RAM)")
 scribbleColorEditModel = ScribbleColorEditModel()
 
 def tensor_to_base64(tensor):
@@ -90,6 +110,8 @@ def prepare_images_and_masks(total_mask, original_image, add_color_image, add_ed
 
 
 def guess(original_image_tensor, add_color_image_tensor, add_edge_mask):
+    if llavaModel is None:
+        return ""  # LLaVA disabled, return empty prompt
     description, ans1, ans2 = llavaModel.process(original_image_tensor, add_color_image_tensor, add_edge_mask)
     ans_list = []
     if ans1 and ans1 != "":
@@ -152,27 +174,33 @@ def generate_image_handler(x, ckpt_name, negative_prompt, fine_edge, grow_size, 
     ms_data = x['from_frontend']
     positive_prompt = x['from_backend']['prompt']
     stroke_as_edge = "enable"
-    res = generate(
-        ckpt_name,
-        ms_data['total_mask'],
-        ms_data['original_image'],
-        ms_data['add_color_image'],
-        ms_data['add_edge_image'],
-        ms_data['remove_edge_image'],
-        positive_prompt,
-        negative_prompt,
-        grow_size,
-        stroke_as_edge,
-        fine_edge,
-        edge_strength,
-        color_strength,
-        inpaint_strength,
-        seed,
-        steps,
+    try:
+        res = generate(
+            ckpt_name,
+            ms_data['total_mask'],
+            ms_data['original_image'],
+            ms_data['add_color_image'],
+            ms_data['add_edge_image'],
+            ms_data['remove_edge_image'],
+            positive_prompt,
+            negative_prompt,
+            grow_size,
+            stroke_as_edge,
+            fine_edge,
+            edge_strength,
+            color_strength,
+            inpaint_strength,
+            seed,
+            steps,
         cfg,
         sampler_name,
         scheduler
-    )
+        )
+    except Exception as e:
+        import traceback
+        print("[MagicQuill] ERROR during image generation:")
+        traceback.print_exc()
+        return x  # Return original data so the UI doesn't crash
     x["from_backend"]["generated_image"] = res
     global AUTO_SAVE
     if AUTO_SAVE:
@@ -331,8 +359,14 @@ app = FastAPI()
 @app.post("/magic_quill/guess_prompt")
 async def guess_prompt(request: Request):
     data = await request.json()
-    res = guess_prompt_handler(data['original_image'], data['add_color_image'], data['add_edge_image'])
-    return res
+    try:
+        res = guess_prompt_handler(data['original_image'], data['add_color_image'], data['add_edge_image'])
+        return res
+    except Exception as e:
+        print(f"[MagicQuill] guess_prompt error: {e}")
+        import traceback
+        traceback.print_exc()
+        return ""
 
 @app.post("/magic_quill/process_background_img")
 async def process_background_img(request: Request):
