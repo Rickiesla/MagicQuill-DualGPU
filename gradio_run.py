@@ -89,7 +89,7 @@ def load_and_resize_image(base64_image, convert_to='RGB', max_size=512):
     image = read_base64_image(base64_image)
     image = image.convert(convert_to)
     width, height = image.size
-    scaling_factor = max_size / min(width, height)
+    scaling_factor = max_size / max(width, height)
     new_size = (int(width * scaling_factor), int(height * scaling_factor))
     image = image.resize(new_size, Image.LANCZOS)
     image_array = np.array(image).astype(np.float32) / 255.0

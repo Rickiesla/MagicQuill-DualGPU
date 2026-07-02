@@ -3,7 +3,7 @@
 Este guia explica como rodar o MagicQuill em uma **AMD RX 580** (ou outras placas AMD
 Polaris/Vega/RDNA não suportadas pelo ROCm no Windows) usando **DirectML**.
 
-> ⚠️ **Importante:** A RX 580 não é suportada pelo ROCm (apenas no Linux e apenas para
+> ⚠️ **Importante:** A RX 580 não é suportada pelo ROCm (só no Linux e só para
 > arquiteturas mais novas). No Windows, a única saída é o **DirectML** da Microsoft.
 
 ---
@@ -20,8 +20,8 @@ Polaris/Vega/RDNA não suportadas pelo ROCm no Windows) usando **DirectML**.
 
 | Recurso | Funciona? | Observação |
 |---------|-----------|------------|
-| **Draw and Guess** (LLaVA) | ⚠️ Lento | Roda na **CPU** (não há bitsandbytes para AMD). Cada inferência pode levar **30s–2min**. |
-| Velocidade geral | ⚠️ Lento | DirectML + fp32 é consideravelmente mais lento que CUDA+fp16 |
+| **Draw and Guess** (LLaVA) | ⚠️ Lento | Roda na **CPU** (não tem bitsandbytes pra AMD). Cada inferência leva **30s–2min**. |
+| Velocidade geral | ⚠️ Lento | DirectML + fp32 é bem mais lento que CUDA + fp16 |
 
 ---
 
@@ -31,7 +31,7 @@ Polaris/Vega/RDNA não suportadas pelo ROCm no Windows) usando **DirectML**.
 2. **Python 3.10** via Conda (Miniconda ou Anaconda).
 3. **Git** instalado.
 4. ~**20 GB livres** em disco (modelos + dependências).
-5. Os modelos do MagicQuill já baixados (coloque-os em `models/` conforme o README original).
+5. Os modelos do MagicQuill já baixados (colocar em `models/` conforme o README original).
 
 ---
 
@@ -43,7 +43,7 @@ Polaris/Vega/RDNA não suportadas pelo ROCm no Windows) usando **DirectML**.
 windows_setup_amd.bat
 ```
 
-O script cria o environment Conda, instala PyTorch+DirectML e inicia o MagicQuill.
+O script cria o environment Conda, instala PyTorch + DirectML e inicia o MagicQuill.
 
 ### Opção B — Manual
 
@@ -53,7 +53,7 @@ conda create -n MagicQuill python=3.10 -y
 conda activate MagicQuill
 conda init cmd.exe
 ```
-Reabra o terminal após o `conda init`.
+Feche e abra o terminal de novo após o `conda init`.
 
 #### 2. Instalar PyTorch (CPU) + DirectML
 ```bat
@@ -91,16 +91,18 @@ Ao iniciar, você verá no console:
 
 ## 🔧 O que foi modificado no código
 
-As seguintes alterações foram feitas para suportar DirectML/AMD:
+Principais alterações feitas para suportar DirectML/AMD:
 
 | Arquivo | Alteração |
 |---------|-----------|
-| `MagicQuill/llava_new.py` | Removido `load_4bit=True` (bitsandbytes é só CUDA). LLaVA roda em **CPU** com fp32. `.cuda()` → `.to(self.model.device)`. |
-| `MagicQuill/brushnet_nodes.py` | Quando DirectML está ativo, usa `load_state_dict` em vez de `load_checkpoint_and_dispatch` (accelerate não suporta DirectML). |
+| `MagicQuill/llava_new.py` | Removeu `load_4bit=True` (bitsandbytes é só CUDA). LLaVA roda em **CPU** com fp32. `.cuda()` → `.to(self.model.device)`. |
+| `MagicQuill/brushnet_nodes.py` | Quando DirectML está ativo, usa `load_state_dict` em vez de `load_checkpoint_and_dispatch` (accelerate não suporta DirectML). Trocou `@torch.inference_mode()` por `@torch.no_grad()` pra evitar erro `Cannot set version_counter for inference tensor`. Usa `isinstance` em vez de comparação exata de tipo pra achar camadas Conv2d (compatível com `manual_cast`). |
 | `MagicQuill/scribble_color_edit.py` | Detecta DirectML e usa **fp32** em vez de fp16 (fp16 é instável em Polaris). |
 | `MagicQuill/comfy/options.py` | Lê `USE_DIRECTML`/`AMD_GPU` e habilita o parsing de args. |
 | `MagicQuill/comfy/model_management.py` | Força `LOW_VRAM` no DirectML; protege `torch.backends.cuda` com try/except. |
-| `gradio_run.py` | Injeta `--directml` no `sys.argv` quando `USE_DIRECTML=1`. |
+| `MagicQuill/comfyui_utils.py` | VAE decode com `.cpu()` no tensor de entrada pra evitar estouro de VRAM. |
+| `MagicQuill/comfy/sd.py` | (opcional) VAE decode inteiro na CPU em caso de OOM. |
+| `gradio_run.py` | Injeta `--directml` no `sys.argv` quando `USE_DIRECTML=1`. Corrigido redimensionamento: agora usa `max()` em vez de `min()` pra garantir que nenhum lado passe de `max_size`. `RES` padrão = 384. |
 
 ---
 
@@ -115,12 +117,19 @@ As seguintes alterações foram feitas para suportar DirectML/AMD:
 - A RX 580 tem 8GB. Em fp32 tudo pesa o dobro. Se ocorrer OOM:
   - Reduza a resolução da imagem (ex: 768×768 em vez de 1024×1024).
   - Feche outros apps que usem VRAM (navegador, jogos).
-- **Imagem preta** geralmente indica NaN por causa de fp16 — já ajustado para fp32 automaticamente.
+- **Imagem preta** geralmente indica NaN por causa de fp16 — já ajustado pra fp32 automaticamente.
+
+### "Cannot set version_counter for inference tensor"
+- Causa: `@torch.inference_mode()` em funções que fazem operaçőes mutáveis (ex: `copy_()`).
+- Solução: trocar por `@torch.no_grad()` — já aplicado no `brushnet_nodes.py`.
+
+### "The size of tensor a (640) must match the size of tensor b (320)"
+- Causa: BrushNet não encontrava a camada Conv2d no primeiro bloco do UNet por causa do `manual_cast`, e as features eram injetadas nos lugares errados.
+- Solução: `last_layer_index` agora usa `isinstance` — já aplicado no `brushnet_nodes.py`.
 
 ### LLaVA muito lento (Draw and Guess)
-- O LLaVA roda na CPU e pode levar até 2 minutos por inferência. Para desativar:
-  - Na interface, clique no ícone de **varinha mágica** (wand) para desligar o
-    preenchimento automático de prompt, e digite o prompt manualmente.
+- O LLaVA roda na CPU e pode levar até 2 minutos por inferência. Pra desativar:
+  - Na interface, clique no ícone de **varinha mágica** (wand) pra desligar o preenchimento automático de prompt, e digite o prompt manualmente.
 
 ### Erro `device_map` / `accelerate`
 - Já corrigido: o BrushNet agora carrega via `load_state_dict` no DirectML.
@@ -143,20 +152,20 @@ As seguintes alterações foram feitas para suportar DirectML/AMD:
 | Geração de imagem (50 steps, 512×512) | 30s – 90s |
 | Geração de imagem (50 steps, 1024×1024) | 2 – 5 min |
 
-> Para comparação, uma RTX 3060 (CUDA, fp16) faz a mesma geração em ~5s.
-> DirectML + fp32 é ~10–20× mais lento que CUDA+fp16. É o preço de não ter ROCm.
+> Pra comparação, uma RTX 3060 (CUDA, fp16) faz a mesma geração em ~5s.
+> DirectML + fp32 é ~10–20× mais lento que CUDA + fp16. É o preço de não ter ROCm.
 
 ---
 
 ## ❓ FAQ
 
-**Posso usar fp16 para ir mais rápido?**
+**Posso usar fp16 pra ir mais rápido?**
 Não na RX 580 (Polaris). O fp16 via DirectML costuma gerar imagens pretas (NaN)
 nessa arquitetura. GPUs RDNA2+ (RX 6000) têm suporte melhor a fp16.
 
 **Vai melhorar no futuro?**
-O ROCm para Windows (HIP SDK) ainda não suporta Polaris. Quando suportar,
-será muito mais rápido que DirectML. Por enquanto, DirectML é o caminho.
+O ROCm pra Windows (HIP SDK) ainda não suporta Polaris. Quando suportar,
+vai ser muito mais rápido que DirectML. Por enquanto, DirectML é o caminho.
 
 **Funciona com outras placas AMD?**
 Sim — qualquer GPU que o DirectML detectar (RX 400/500/5000/6000/7000).
