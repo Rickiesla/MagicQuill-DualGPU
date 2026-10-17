@@ -1,11 +1,12 @@
-# 🪶 MagicQuill-AMD-RX580
+# 🪶 MagicQuill-DualGPU
 
 **Fork de [`magic-quill/MagicQuill`](https://github.com/magic-quill/MagicQuill)** — sistema
 interativo de edição de imagens com inteligência artificial *(CVPR 2025)*,
-**modificado para rodar na AMD RX 580 (DirectML)** e mantido compatível com
-NVIDIA (CUDA).
+**adaptado por [@Rickiesla](https://github.com/Rickiesla) para rodar em GPU AMD
+(RX 580, DirectML)** e mantido 100% compatível com NVIDIA (CUDA).
 
 [![Fork de magic-quill/MagicQuill](https://img.shields.io/badge/fork-magic--quill%2FMagicQuill-blue.svg)](https://github.com/magic-quill/MagicQuill)
+[![Autor da adaptação AMD: Rickiesla](https://img.shields.io/badge/adapta%C3%A7%C3%A3o%20AMD-Rickiesla-blue.svg)](https://github.com/Rickiesla)
 [![arXiv](https://img.shields.io/badge/arXiv-2411.09703-b31b1b.svg)](https://arxiv.org/abs/2411.09703)
 [![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](LICENSE)
 [![Python 3.10](https://img.shields.io/badge/Python-3.10-blue.svg)](https://www.python.org/)
@@ -13,19 +14,22 @@ NVIDIA (CUDA).
 
 > ⚡ **Este repositório é um fork modificado** do projeto oficial
 > [magic-quill/MagicQuill](https://github.com/magic-quill/MagicQuill) — ele **não**
-> é o repositório dos autores. As diferenças em relação ao original:
+> é o repositório dos autores. **A adaptação para GPU AMD (DirectML) foi feita por
+> [@Rickiesla](https://github.com/Rickiesla)** (esta fork); o projeto original só
+> suportava NVIDIA/CUDA. As diferenças em relação ao original:
 >
-> - ✅ **Suporte AMD/DirectML** — adaptado para a **RX 580 (6 GB)**, que roda
->   normalmente; o original só suporta NVIDIA/CUDA;
+> - ✅ **Suporte AMD/DirectML** — adaptado para a **AMD RX 580 (6 GB VRAM)** por
+>   [@Rickiesla](https://github.com/Rickiesla), que roda normalmente nesta placa;
 > - ✅ **Compatibilidade NVIDIA mantida** — mesmo código roda em CUDA (verificado
->   em RTX 3060 12 GB);
+>   em **NVIDIA RTX 3060 12 GB**);
 > - ✅ **Documentação nova em português** (este README + guia AMD) com download
 >   dos modelos, instalação das duas marcas e solução de problemas;
 > - ✅ **Correção de bugs** (steps fracionário, prompt nulo, caminhos de modelo
 >   errados nos `.bat`, `print.warning` inexistente) e limpeza de código morto.
 >
-> Créditos, paper e licença continuam dos autores originais (ver
-> [seção 15](#15-licença-e-citação)).
+> **Testado em:** AMD RX 580 6 GB (DirectML) e NVIDIA RTX 3060 12 GB (CUDA).
+> Créditos do projeto original, paper e licença continuam sendo dos autores
+> originais (ver [seção 15](#15-licença-e-citação)).
 
 > O MagicQuill transforma traços desenhados à mão em edições precisas de imagem.
 > Basta desenhar sobre a foto, escrever um prompt e deixar a IA preencher o resto —
@@ -564,6 +568,10 @@ O código está sob **CC BY-NC 4.0** ([LICENSE](LICENSE)) — **uso não comerci
 (O badge antigo dizia CC BY-SA 4.0; o arquivo `LICENSE` manda.)
 
 Ao publicar resultados derivados, inclua a atribuição aos autores originais.
+
+> **Sobre esta fork:** a adaptação para GPU AMD (DirectML / RX 580) foi feita por
+> [@Rickiesla](https://github.com/Rickiesla). O crédito do projeto original
+> (arquitetura, modelo, paper) é inteiramente dos autores listados abaixo.
 
 ### Citação
 
