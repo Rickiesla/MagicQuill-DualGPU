@@ -524,41 +524,37 @@ de divergência, siga este README.*
 
 ## 14. Pontos de atenção (análise estática do código)
 
-Levantamento feito **sem alterar o código** — nada abaixo foi corrigido, são
-comportamentos reais do programa como está hoje:
+Análise feita sobre o código desta fork, dividida em dois blocos: **correções
+que fizemos aqui** (bugs que já existiam no projeto oficial e foram resolvidos
+neste fork) e **comportamentos herdados do original** (mantidos de propósito —
+reproduzem exatamente o projeto que os autores publicaram).
 
-1. **Steps fracionário quebra a geração** — ✅ **corrigido**: o slider ganhou
-   `step=1` e `generate()` converte `steps` para inteiro. Valores fracionários
-   causavam `TypeError` dentro do sampler.
-2. **Prompt inicialmente nulo** — ✅ **corrigido**: um prompt `null` vindo da
-   interface agora é convertido em `""` antes de chegar ao encoder.
-3. **Sem validação de imagem/máscara** — ⚠️ **parcial**: se a máscara total
-   ficar vazia (sem canal alfa / sem traços) o console agora avisa antes da
-   geração; tamanhos divergentes entre imagem e máscara ainda falham, com o
-   erro apenas no terminal.
-4. **Erros engolidos** — mantido por design (a UI não derruba por exceção);
-   **sempre olhe o terminal** quando algo falhar.
-5. **`except:` em `MagicQuill/model_patch.py` chamava `print.warning`**
-   (inexistente em Python) — ✅ **corrigido**: agora captura a exceção e imprime
-   com `print`, informando o formato dos tensores.
-6. **UNet em fp8 por padrão em CUDA** (`--fp8_e4m3fn-unet` vem com
-   `default=True` em `MagicQuill/comfy/cli_args.py`) — mantido: funciona e
-   economiza VRAM na RTX; é uma diferença em relação ao ComfyUI padrão.
-7. **Fallback de OOM do VAE só existe para CUDA** — mantido (alterar o caminho
-   de DirectML/AMD era arriscado); em AMD, reduza resolução para evitar OOM.
-8. **Código morto** — ✅ **parcialmente limpo**: removidos os imports sem uso
-   (`subprocess`, `requests`, `io` duplicado), o rádio `stroke_as_edge`
-   comentado, o comentário de rota morta e o argumento `progress` (que caía na
-   posição errada do parâmetro `base_model_version` de `process()`). Permanecem,
-   por segurança, nodes nunca chamados (`PowerPaint`, `CutForInpaint`) e ramos
-   `stroke_as_edge=disable` inalcançáveis.
-9. **`temp_whl/` não estava ignorado** pelo Git — ✅ **corrigido** no
-   `.gitignore` (junto com `run_out.log`/`run_err.log`).
-10. **Duas instâncias de `folder_paths`** convivem no processo — mantido:
-    funciona, mas a ordem dos imports é frágil (`scribble_color_edit.py`
-    compensa com `sys.path.append`).
-11. **Porta/host fixos** e flags de CLI ignorados — mantido, comportamento
-    documentado na [seção 8](#8-como-rodar).
+### 14.1 Correções aplicadas nesta fork (bug do original → resolvido aqui)
+
+| Problema que existe no projeto original | O que fizemos aqui |
+|---|---|
+| Steps fracionário (ex.: `25.5`) quebrava a geração com `TypeError` dentro do sampler | Slider ganhou `step=1` e `generate()` converte `steps` para inteiro |
+| Prompt inicialmente `null` chegava até o encoder | `null` vindo da interface é convertido em `""` antes do encoder |
+| `except:` em `MagicQuill/model_patch.py` chamava `print.warning` (inexistente em Python) — a exceção engolia mais um erro | Captura a exceção e imprime com `print`, informando o formato dos tensores |
+| Máscara total vazia (sem alfa/traços) seguia em silêncio pra geração — imagem saía igual | O console agora **avisa antes** de gerar; *pendência*: tamanhos divergentes entre imagem e máscara ainda falham, com o erro só no terminal |
+| Código morto: imports sem uso (`subprocess`, `requests`, `io` duplicado), rádio `stroke_as_edge` comentado, argumento `progress` caindo na posição errada de `base_model_version` em `process()` | Removidos (nodes nunca chamados — `PowerPaint`, `CutForInpaint` — e ramos `stroke_as_edge=disable` ficaram, por segurança) |
+| `temp_whl/`, `run_out.log`, `run_err.log` podiam ser versionados por engano | Adicionados ao `.gitignore` |
+
+### 14.2 Comportamentos herdados do projeto original (mantidos — iguais ao oficial)
+
+- **Erros engolidos pela UI** — por design, a interface não derruba por
+  exceção; **sempre olhe o terminal** quando algo falhar.
+- **UNet em fp8 por padrão em CUDA** (`--fp8_e4m3fn-unet` com `default=True`
+  em `MagicQuill/comfy/cli_args.py`) — funciona e economiza VRAM na RTX;
+  é uma diferença em relação ao ComfyUI padrão.
+- **Fallback de OOM do VAE só existe para CUDA** — não mexemos (alterar o
+  caminho de DirectML/AMD era arriscado); em AMD, reduza a resolução para
+  evitar OOM.
+- **Duas instâncias de `folder_paths`** convivem no processo — funciona, mas
+  a ordem dos imports é frágil (`scribble_color_edit.py` compensa com
+  `sys.path.append`).
+- **Porta/host fixos** (`127.0.0.1:7860`) e flags de CLI ignoradas —
+  comportamento documentado na [seção 8](#8-como-rodar).
 
 ---
 
