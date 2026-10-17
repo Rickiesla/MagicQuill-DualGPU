@@ -14,3 +14,6 @@ debug.log
 temp_whl/
 run_out.log
 run_err.log
+
+# config do opencode (não faz parte do projeto)
+.opencode/
