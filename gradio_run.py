@@ -1,4 +1,3 @@
-import subprocess
 import os
 import sys
 import gradio as gr
@@ -11,7 +10,6 @@ import base64
 import io
 from fastapi import FastAPI, Request
 import uvicorn
-import requests
 
 # --- DirectML / AMD GPU support ---
 # Enables --directml flag for AMD GPUs (e.g., RX 580) on Windows.
@@ -27,7 +25,6 @@ from MagicQuill import folder_paths
 from MagicQuill.llava_new import LLaVAModel
 from MagicQuill.scribble_color_edit import ScribbleColorEditModel
 import time
-import io
 
 AUTO_SAVE = False
 RES = 384
@@ -135,8 +132,10 @@ def guess_prompt_handler(original_image, add_color_image, add_edge_image):
     return res
 
 def generate(ckpt_name, total_mask, original_image, add_color_image, add_edge_image, remove_edge_image, positive_prompt, negative_prompt, grow_size, stroke_as_edge, fine_edge, edge_strength, color_strength, inpaint_strength, seed, steps, cfg, sampler_name, scheduler):
+    steps = int(steps)
     add_color_image, original_image, total_mask, add_edge_mask, remove_edge_mask = prepare_images_and_masks(total_mask, original_image, add_color_image, add_edge_image, remove_edge_image)
-    progress = None
+    if torch.sum(total_mask).item() == 0:
+        print("[MagicQuill] warning: total mask is empty (missing alpha channel or no strokes) - generation will not change the image.")
     if torch.sum(remove_edge_mask).item() > 0 and torch.sum(add_edge_mask).item() == 0:
         if positive_prompt == "":
             positive_prompt = "empty scene"
@@ -161,8 +160,7 @@ def generate(ckpt_name, total_mask, original_image, add_color_image, add_edge_im
         steps, 
         cfg, 
         sampler_name, 
-        scheduler,
-        progress
+        scheduler
     )
 
     final_image_base64 = tensor_to_base64(final_image)
@@ -172,7 +170,7 @@ def generate_image_handler(x, ckpt_name, negative_prompt, fine_edge, grow_size, 
     if seed == -1:
         seed = random.randint(0, 2**32 - 1)
     ms_data = x['from_frontend']
-    positive_prompt = x['from_backend']['prompt']
+    positive_prompt = x['from_backend'].get('prompt') or ""
     stroke_as_edge = "enable"
     try:
         res = generate(
@@ -192,9 +190,9 @@ def generate_image_handler(x, ckpt_name, negative_prompt, fine_edge, grow_size, 
             inpaint_strength,
             seed,
             steps,
-        cfg,
-        sampler_name,
-        scheduler
+            cfg,
+            sampler_name,
+            scheduler
         )
     except Exception as e:
         import traceback
@@ -264,12 +262,6 @@ with gr.Blocks(css=css) as demo:
                     value="",
                     interactive=True
                 )
-                # stroke_as_edge = gr.Radio(
-                #     label="Stroke as Edge",
-                #     choices=['enable', 'disable'],
-                #     value='enable',
-                #     interactive=True
-                # )
                 fine_edge = gr.Radio(
                     label="Fine Edge",
                     choices=['enable', 'disable'],
@@ -319,6 +311,7 @@ with gr.Blocks(css=css) as demo:
                     minimum=1,
                     maximum=50,
                     value=20,
+                    step=1,
                     interactive=True
                 )
                 cfg = gr.Slider(

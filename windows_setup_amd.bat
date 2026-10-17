@@ -67,10 +67,10 @@ if not exist "models" (
     echo   Siga as instrucoes no README.md do MagicQuill (secao de download dos modelos).
     echo.
     echo   Os arquivos devem ficar em:
-    echo     models\SD1.5\realisticVisionV60B1_v51VAE.safetensors
+    echo     models\checkpoints\SD1.5\realisticVisionV60B1_v51VAE.safetensors
     echo     models\controlnet\control_v11p_sd15_scribble.safetensors
     echo     models\controlnet\color_finetune.safetensors
-    echo     models\brushnet\random_mask_brushnet_ckpt\diffusion_pytorch_model.safetensors
+    echo     models\inpaint\brushnet\random_mask_brushnet_ckpt\diffusion_pytorch_model.safetensors
     echo     models\llava-v1.5-7b-finetune-clean\  (pasta completa)
     echo.
     pause

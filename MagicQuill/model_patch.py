@@ -132,7 +132,7 @@ def modified_apply_control(h, control, name):
                 ctrl = torch.nn.functional.interpolate(ctrl, size=(h.shape[2], h.shape[3]), mode='bicubic').to(h.dtype).to(h.device)                    
             try:
                 h += ctrl
-            except:
-                print.warning("warning control could not be applied {} {}".format(h.shape, ctrl.shape))
+            except Exception as e:
+                print("[MagicQuill] warning: control could not be applied {} {} ({})".format(h.shape, ctrl.shape, e))
     return h    
 

@@ -9,3 +9,8 @@ output/
 models/
 venv/
 debug.log
+
+# código-fonte da interface e logs de execução locais
+temp_whl/
+run_out.log
+run_err.log

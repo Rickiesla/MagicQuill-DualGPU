@@ -1,3 +1,6 @@
+@echo off
+cd /d "%~dp0"
+
 :: Create conda environment if it doesn't exist
 conda env list | find "MagicQuill" >nul 2>nul
 if %ERRORLEVEL% NEQ 0 (
