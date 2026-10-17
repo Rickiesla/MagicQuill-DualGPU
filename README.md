@@ -1,194 +1,593 @@
-# 🪶 MagicQuill: An Intelligent Interactive Image Editing System (*CVPR 2025*)
-<a href="https://magicquill.art/demo/"><img src="https://img.shields.io/static/v1?label=Project&message=magicquill.art&color=blue"></a>
-<a href="https://arxiv.org/abs/2411.09703"><img src="https://img.shields.io/badge/arXiv-2411.09703-b31b1b.svg"></a>
-<a href="https://huggingface.co/spaces/AI4Editing/MagicQuill"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)"></a>
-<a href="https://creativecommons.org/licenses/by-sa/4.0/"><img src="https://img.shields.io/badge/License-CC%20BY--SA%204.0-lightgrey.svg"></a>
-<a href="https://magicquill.art/v2/"><img src="https://img.shields.io/static/v1?label=Project&message=MagicQuillV2&color=red"></a>
+# 🪶 MagicQuill-AMD-RX580
 
-https://github.com/user-attachments/assets/8ee9663a-fef2-484a-a0b7-8427ab590424
+**Fork de [`magic-quill/MagicQuill`](https://github.com/magic-quill/MagicQuill)** — sistema
+interativo de edição de imagens com inteligência artificial *(CVPR 2025)*,
+**modificado para rodar na AMD RX 580 (DirectML)** e mantido compatível com
+NVIDIA (CUDA).
 
-There is an HD video on [Youtube](https://www.youtube.com/watch?v=5DiKfONMnE4).
+[![Fork de magic-quill/MagicQuill](https://img.shields.io/badge/fork-magic--quill%2FMagicQuill-blue.svg)](https://github.com/magic-quill/MagicQuill)
+[![arXiv](https://img.shields.io/badge/arXiv-2411.09703-b31b1b.svg)](https://arxiv.org/abs/2411.09703)
+[![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](LICENSE)
+[![Python 3.10](https://img.shields.io/badge/Python-3.10-blue.svg)](https://www.python.org/)
+[![GPU: AMD (DirectML) / NVIDIA (CUDA)](https://img.shields.io/badge/GPU-AMD%20DirectML%20%7C%20NVIDIA%20CUDA-green.svg)](#2-compatibilidade-de-gpu)
 
-[Zichen Liu](https://zliucz.github.io)<sup>\*,1,2</sup>, [Yue Yu](https://bruceyyu.github.io/)<sup>\*,1,2</sup>, [Hao Ouyang](https://ken-ouyang.github.io/)<sup>2</sup>, [Qiuyu Wang](https://github.com/qiuyu96)<sup>2</sup>, [Ka Leong Cheng](https://felixcheng97.github.io/)<sup>1,2</sup>, [Wen Wang](https://github.com/encounter1997)<sup>3,2</sup>, [Zhiheng Liu](https://johanan528.github.io/)<sup>4</sup>, [Qifeng Chen](https://cqf.io/)<sup>†,1</sup>, [Yujun Shen](https://shenyujun.github.io/)<sup>†,2</sup><br>
-<sup>1</sup>HKUST <sup>2</sup>Ant Group <sup>3</sup>ZJU <sup>4</sup>HKU <sup>\*</sup>equal contribution <sup>†</sup>corresponding author
-
-> TLDR: MagicQuill is an intelligent and interactive system achieving precise image editing.
+> ⚡ **Este repositório é um fork modificado** do projeto oficial
+> [magic-quill/MagicQuill](https://github.com/magic-quill/MagicQuill) — ele **não**
+> é o repositório dos autores. As diferenças em relação ao original:
 >
-> Key Features: 😎 User-friendly interface / 🤖 AI-powered suggestions / 🎨 Precise local editing
+> - ✅ **Suporte AMD/DirectML** — adaptado para a **RX 580 (6 GB)**, que roda
+>   normalmente; o original só suporta NVIDIA/CUDA;
+> - ✅ **Compatibilidade NVIDIA mantida** — mesmo código roda em CUDA (verificado
+>   em RTX 3060 12 GB);
+> - ✅ **Documentação nova em português** (este README + guia AMD) com download
+>   dos modelos, instalação das duas marcas e solução de problemas;
+> - ✅ **Correção de bugs** (steps fracionário, prompt nulo, caminhos de modelo
+>   errados nos `.bat`, `print.warning` inexistente) e limpeza de código morto.
+>
+> Créditos, paper e licença continuam dos autores originais (ver
+> [seção 15](#15-licença-e-citação)).
 
-- [🪶 MagicQuill: An Intelligent Interactive Image Editing System](#-magicquill-an-intelligent-interactive-image-editing-system)
-  - [TODO List](#todo-list)
-  - [Update Log](#update-log)
-  - [Hardware Requirements](#hardware-requirements)
-  - [Docker Container](#docker-container)
-  - [Setup](#setup)
-  - [Tutorial](#tutorial)
-  - [Citation](#citation)
-  - [Acknowledgement](#acknowledgement)
-  - [Note](#note)
+> O MagicQuill transforma traços desenhados à mão em edições precisas de imagem.
+> Basta desenhar sobre a foto, escrever um prompt e deixar a IA preencher o resto —
+> adicionar elementos, remover detalhes ou recolorir regiões com controle local.
 
-## [MagicQuillV2](https://magicquill.art/v2/) has been released!!! Check it out ;)
+Projeto original: [magicquill.art](https://magicquill.art/) ·
+Repositório oficial: [github.com/magic-quill/MagicQuill](https://github.com/magic-quill/MagicQuill) ·
+Demo oficial: [Hugging Face](https://huggingface.co/spaces/AI4Editing/MagicQuill) ·
+Vídeo: [YouTube](https://www.youtube.com/watch?v=5DiKfONMnE4)
 
-## TODO List
-
-- [x] Release the paper and demo page. Visit [magicquill.art](https://magicquill.art) 🪩
-- [x] Release the code and checkpoints.
-- [x] Release gradio demo.
-- [x] Release ComfyUI MagicQuill custom node.
-
-<img src="docs/comfyui.png" width="100%" >
-
-## Update Log
-
-- [2024.11.21] 📢 Update the save button; Fix path bug on Windows; Add `.bat` and `.sh` files for convenient environment install on Windows and Linux. Thanks [lior007](https://github.com/lior007) and [JamesIV4](https://github.com/JamesIV4).
-- [2024.11.25] 📢 New UI Updates: Drag & Drop Images + Download Button: We've enhanced our interface with two exciting features! Now you can easily upload images with drag & drop functionality, and quickly save your work using our new download button. Try it out and let us know what you think!
-- [2024.12.06] 📢 New Feature Updates: Auto-save and Resolution Adjustment are now enabled in the parameter settings. Thanks [Furkan Gözükara](https://github.com/FurkanGozukara) for his brilliant suggestions.
-- [2024.12.07] 🎉 Exciting News: ComfyUI MagicQuill Node has been released! Check the repository https://github.com/magic-quill/ComfyUI_MagicQuill for more details.
-- [2024.12.16] 🎉 Exciting News: MagicQuill is also available at [Modelscope](https://modelscope.cn/studios/ant-research/MagicQuill_demo). Thanks for their amazing support and infrastructure.
-- [2025.01.02] 🎉 Exciting News: MagicQuill docker container is now available. You can now build & run your own image in a cleaner, isolated environment. Thanks [gbudge](https://github.com/gbudge) for his contribution.
-- [2025.02.27] 🎉 Exciting News: MagicQuill has been accepted to CVPR 2025! Looking forward to meeting everyone in Tennessee!
-- [2025.12.03] 🎉 Exciting News: [MagicQuillV2](https://magicquill.art/v2/) has been released! Check it out ;), give us a [star](https://github.com/zliucz/MagicQuillV2) if you are interested.
-
-To update the latest features, pull the latest code and re-install the gradio_magicquill:
-```
-pip uninstall -y gradio_magicquill-0.0.1-py3-none-any.whl
-pip install gradio_magicquill-0.0.1-py3-none-any.whl
-```
-
-## Hardware Requirements
-
-- GPU is required to run MagicQuill. **Through our testing, we have confirmed that the model can run on GPUs with 8GB VRAM (RTX4070 Laptop).**
-
-For users with limited GPU resources, please try our [Huggingface Demo](https://huggingface.co/spaces/AI4Editing/MagicQuill) and [Modelscope Demo](https://modelscope.cn/studios/ant-research/MagicQuill_demo). Also, consider disabling the DrawNGuess automatic prompt filling by clicking the wand icon above if it takes too long time on your machine.
-
-##  Setup
-Follow the following guide to set up the environment.
-
-1. git clone repo. **Please don't forget the `--recursive` flag.** Otherwise, you will find `LLaVA` submodule missing.
-    ```
-    git clone --recursive https://github.com/magic-quill/MagicQuill.git
-    cd MagicQuill
-    ```
-2. download and unzip checkpoints
-    ```
-    wget -O models.zip "https://hkustconnect-my.sharepoint.com/:u:/g/personal/zliucz_connect_ust_hk/EWlGF0WfawJIrJ1Hn85_-3gB0MtwImAnYeWXuleVQcukMg?e=Gcjugg&download=1"
-    unzip models.zip
-    ```
-    If the .zip file is not accessible, download it via browser. All checkpoints are about 25 GB in total. It may take some time to download. Alternatively, check our checkpoints at [huggingface](https://huggingface.co/LiuZichen/MagicQuill-models).
+![Exemplo de edição](docs/gifs/deer.gif)
 
 ---
 
-If you are a Windows user, you may try to use `windows_setup.bat` to conveniently install environments, just enter `windows_setup.bat` in your Python shell. For Linux user, check `linux_setup.sh`.
+## Índice
 
-Alternatively, follow the step-by-step installation guide.
+1. [O que é o projeto](#1-o-que-é-o-projeto)
+2. [Compatibilidade de GPU](#2-compatibilidade-de-gpu)
+3. [Requisitos do sistema](#3-requisitos-do-sistema)
+4. [O que é versionado (o que sobe para o GitHub)](#4-o-que-é-versionado-o-que-sobe-para-o-github)
+5. [Modelos de IA — download e instalação](#5-modelos-de-ia--download-e-instalação)
+6. [Instalação — NVIDIA (CUDA)](#6-instalação--nvidia-cuda)
+7. [Instalação — AMD (DirectML)](#7-instalação--amd-directml)
+8. [Como rodar](#8-como-rodar)
+9. [Interface e parâmetros](#9-interface-e-parâmetros)
+10. [Draw and Guess (LLaVA)](#10-draw-and-guess-llava)
+11. [Estrutura técnica do código](#11-estrutura-técnica-do-código)
+12. [Desempenho esperado](#12-desempenho-esperado)
+13. [Solução de problemas](#13-solução-de-problemas)
+14. [Pontos de atenção (análise estática do código)](#14-pontos-de-atenção-análise-estática-do-código)
+15. [Licença e citação](#15-licença-e-citação)
 
-3. create environment
-    ```
-    conda create -n MagicQuill python=3.10 -y
-    conda activate MagicQuill
-    ```
+---
 
-4. install torch with GPU support
-    ```
-    pip install torch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 --index-url https://download.pytorch.org/whl/cu118
-    ```
+## 1. O que é o projeto
 
-5. install the interface
-    ```
-    pip install gradio_magicquill-0.0.1-py3-none-any.whl
-    ```
-    
-6. install llava environment
-    ```
-    (For Linux)
-    cp -f pyproject.toml MagicQuill/LLaVA/
-    pip install -e MagicQuill/LLaVA/
-    ```
-    or
-    ```
-    (For Windows)
-    copy /Y pyproject.toml MagicQuill\LLaVA\
-    pip install -e MagicQuill\LLaVA\
-    ```
-    (For Windows PowerShell, the first line should be `Copy-Item -Path pyproject.toml -Destination "MagicQuill\LLaVA" -Force`)
-    
+O MagicQuill é um **editor de imagens assistido por IA**, publicado no CVPR 2025
+por pesquisadores da HKUST, Ant Group, ZJU e HKU. Ele combina três modelos de
+deep learning (um modelo base SD1.5, dois ControlNets e um BrushNet) com uma
+interface web desenhada para desenho à mão:
 
-7. install the remaining environment
-    ```
-    pip install -r requirements.txt
-    ```
+| Pincel | O que faz |
+|--------|-----------|
+| **Adicionar** (traço verde) | Insere novos elementos/detalhes guiados pelo prompt, seguindo o seu traço |
+| **Remover** (traço vermelho) | Apaga ou redesenha a área marcada |
+| **Colorir** (pincel de cor) | Pinta uma região e o ControlNet de cor espalha a paleta pela imagem |
 
-8. run magicquill
-    ```
-    python gradio_run.py
-    ```
-    If you are mainland user, you may try `export HF_ENDPOINT=https://hf-mirror.com` to use huggingface mirror to facilitate the download of some necessary checkpoints to run our system.
+Além disso, o botão **Draw and Guess** (varinha mágica) usa um modelo LLaVA-7B
+para *escrever o prompt automaticamente* a partir dos seus traços — **desligado
+por padrão** por ser pesado (ver [seção 10](#10-draw-and-guess-llava)).
 
+**Fluxo de trabalho:** suba uma imagem → desenhe os traços → (opcional) gere o
+prompt → ajuste os parâmetros → **Run** → a imagem editada aparece, com opção de
+salvar automaticamente.
 
-## Docker Container
+> Neste repositório o projeto foi adaptado para rodar em **duas GPU**:
+> NVIDIA via **CUDA** e AMD via **DirectML** (API da Microsoft — é o caminho
+> possível para placas AMD no Windows, já que o ROCm não suporta Polaris).
 
-You can build a docker container with MagicQuill as follows:
+---
 
-1. git clone repo. **Please don't forget the `--recursive` flag.** Otherwise, you will find `LLaVA` submodule missing.
-    ```
-    git clone --recursive https://github.com/magic-quill/MagicQuill.git
-    cd MagicQuill
-    ```
+## 2. Compatibilidade de GPU
 
-2. download and unzip checkpoints
-    ```
-    wget -O models.zip "https://hkustconnect-my.sharepoint.com/:u:/g/personal/zliucz_connect_ust_hk/EWlGF0WfawJIrJ1Hn85_-3gB0MtwImAnYeWXuleVQcukMg?e=Gcjugg&download=1"
-    unzip models.zip
-    ```
-    If the .zip file is not accessible, download it via browser. All checkpoints are about 25 GB in total. It may take some time to download. Alternatively, check our checkpoints at [huggingface](https://huggingface.co/LiuZichen/MagicQuill-models).
-    
-    Note: these can be located anywhere on the host computer, but Docker Compose expects them to be in `/data/magicquill/models` by default. Update `docker-compose.yaml` if you unzip them to another location.
+| GPU | Modo de execução | Comando | Situação |
+|-----|------------------|---------|----------|
+| **NVIDIA** (qualquer com 8 GB+) | CUDA (fp16/fp8) | `venv\Scripts\python.exe gradio_run.py` | ✅ Verificado abrindo e carregando os modelos em uma **RTX 3060 12 GB** |
+| **AMD Radeon RX 580 (6 GB VRAM)** | DirectML (fp32) | `rodar.bat` | ✅ **Rodava normalmente** nesta GPU (era a placa usada antes da RTX 3060) |
+| Outras AMD (RX 400/500/5000/6000/7000) | DirectML (fp32) | `rodar.bat` | ✅ Desde que o DirectML detecte a placa (Win10/11 + driver atual) |
+| Sem GPU | CPU | — | ⛔ Possível, porém imprestável para geração |
 
-3. build the image
-   ```
-   docker compose build
-   ```
+Notas importantes:
 
-4. run the image
-   ```
-   docker compose up -d
-   ```
+- **CUDA e DirectML são caminhos de arranque diferentes** — o mesmo comando não
+  serve para as duas marcas (detalhes na [seção 8](#8-como-rodar)).
+- A RX 580 **não é suportada pelo ROCm no Windows**; o DirectML é a única via.
+  Em DirectML o modelo roda em **fp32** (o fp16 gera imagens pretas/NaN em
+  GPUs Polaris), por isso é naturalmente mais lento que CUDA.
+- O LLaVA (Draw and Guess) roda **na CPU**, em qualquer placa
+  (`MagicQuill/llava_new.py` fixa `LLAVA_DEVICE = "cpu"`).
 
-## Tutorial
+### Como o programa escolhe a GPU: CUDA × DirectML
 
-Please read before you try!
+O CUDA **não fica no código** — o vínculo está em três camadas:
 
-<!DOCTYPE html>
-<html>
-<body>
-<div class="tutorial"><div><h3 align="center" class="heading">I. Three type of magic quills</h3><div align="center"><img fill="white" src="docs/icons/brush_edge_add.svg" alt="SVG image" class="icon" width="100"></div><div align="center"><br>Use the <b>add brush</b> to add details and elements guided by prompts - express your ideas with your own lively strokes!<br></div><div class="ant-row css-1kuana8"><div class="ant-col ant-col-xs-24 ant-col-md-12 css-1kuana8"><div align="center"><br><img width="300" src="docs/gifs/deer.gif" alt="gif description" class="gif"></div><div align="center"><small>"With just a few strokes, a vivid little deer comes to life"</small><br></div></div><div class="ant-col ant-col-xs-24 ant-col-md-12 css-1kuana8"><div align="center"><br><img width="300" src="docs/gifs/necklace.gif" alt="gif description" class="gif"></div><div align="center"><small> "Adorn the beautiful lady with a necklace"</small><br></div></div></div><div align="center"><br><img src="docs/icons/brush_edge_remove.svg" alt="SVG image" class="icon" width="100"></div><div align="center"><br>The <b>subtract brush</b> can remove excess details or redraw areas based on prompts. If there's anything you're not satisfied with, just subtract it away!<br></div><div class="ant-row css-1kuana8"><div class="ant-col ant-col-xs-24 ant-col-md-12 css-1kuana8"><div align="center"><br><img width="300" src="docs/gifs/dolphin.gif" alt="gif description" class="gif"></div><div align="center"><small> "A dolphin with two tail fins? Let's give it a quick 'treatment'!"</small><br></div></div><div class="ant-col ant-col-xs-24 ant-col-md-12 css-1kuana8"><div align="center"><br><img width="300" src="docs/gifs/skeleton cowboy.gif" alt="gif description" class="gif"></div><div align="center"><small> "Let's take off Mr. Skeleton's hat and help him cool down."</small><br><br></div></div></div><div align="center" style="display: flex; justify-content: center; align-items: center; gap: 10px;"><br><img src="docs/icons/brush_edge_add.svg" alt="add brush" class="icon" width="100"><span>&amp;</span><img src="docs/icons/brush_edge_remove.svg" alt="minus brush" class="icon" width="100"></div><div align="center"><br>Combine the <b>add and subtract brushes</b> to create amazing combo effects!<br></div><div class="ant-row css-1kuana8"><div class="ant-col ant-col-xs-24 ant-col-md-12 css-1kuana8"><div align="center"><br><img width="300" src="docs/gifs/mona lisa cat.gif" alt="gif description" class="gif"></div><div align="center"><small> "Let's give Mona Lisa a pet cat~"</small><br></div></div><div class="ant-col ant-col-xs-24 ant-col-md-12 css-1kuana8"><div align="center"><br><img width="300" src="docs/gifs/handsome bowtie.gif" alt="gif description" class="gif"></div><div align="center"><small> "Let's give this handsome fellow a new tie!"</small><br><br></div></div></div><div align="center"><img src="docs/icons/brush.svg" alt="SVG image" class="icon" width="100"></div><div align="center"><br>The <b>color brush</b> can precisely color the image, matching the color of your brush~<br></div><div class="ant-row css-1kuana8"><div class="ant-col ant-col-xs-24 ant-col-md-12 css-1kuana8"><div align="center"><br><img width="300" src="docs/gifs/beautiful hair.gif" alt="gif description" class="gif"></div><div align="center"><small>"Precise color highlighting - paint exactly where you want to color"</small><br></div></div><div class="ant-col ant-col-xs-24 ant-col-md-12 css-1kuana8"><div align="center"><br><img width="300" src="docs/gifs/cake flowers.gif" alt="gif description" class="gif"></div><div align="center"><small> "Don't you think the blue flowers look more dreamy than the pink ones?"</small><br><br></div></div></div><div align="center">*Please note the color brush and add&amp;subtract brush are mutually exclusive - you can only use one at a time!<br><br></div><hr><h3 align="center" class="heading">II. Draw and Guess</h3><div align="center"><img src="docs/icons/wand.svg" alt="SVG image" class="icon" width="100"></div><div align="center">Our brush is super smart! Look at the examples above - as soon as you finish drawing, it quickly guesses what you want to create and fills in the prompts for you~ Sometimes it might guess wrong though, so feel free to tell it what you actually want to draw~<br></div><div class="ant-row ant-row-center css-1kuana8"><div class="ant-col ant-col-xs-24 ant-col-md-12 css-1kuana8"><div align="center"><br><img width="300" src="docs/gifs/path.gif" alt="gif description" class="gif"></div><div align="center"><small> "Oops! I don't want to draw a vine, I want to create a path!"</small><br><br></div></div></div><hr><h3 align="center" class="heading">III. Super useful canvas tools!</h3><div align="center"><br><img src="docs/icons/upload.svg" alt="SVG image" class="icon" width="100"></div><div align="center">Click this button to upload the photo you want to edit~<br></div><div align="center"><br><img src="docs/icons/eraser.svg" alt="SVG image" class="icon" width="100"></div><div align="center">Made a mistake with the brush? Just erase it with the rubber tool!<br></div><div align="center"><br><img src="docs/icons/cursor.svg" alt="SVG image" class="icon" width="100"></div><div align="center">Drag, rotate, and resize your strokes with the cursor - just like when you're working in PowerPoint!<br></div><br><div align="center" style="display: flex; justify-content: center; align-items: center; gap: 10px;"><img src="docs/icons/undo.svg" alt="add brush" class="icon" width="100"><span>&amp;</span><img src="docs/icons/redo.svg" alt="minus brush" class="icon" width="100"></div><div align="center">Left is ctrl+z, right is ctrl+y - you know what that means! 😊<br>And for Mac users, left is command+z, right is command+shift+z! 😝<br></div><div align="center"><br><img src="docs/icons/delete.svg" alt="SVG image" class="icon" width="100"></div><div align="center">Oops! That doesn't look right 😵 - click this trash bin to delete the stroke<br></div><div align="center"><br><img src="docs/icons/eye.svg" alt="SVG image" class="icon" width="100"></div><div align="center">The brush strokes are in my way, how can I see the image😡?! Try clicking this button to temporarily hide your strokes<br></div><br><div align="center" style="display: flex; justify-content: center; align-items: center; gap: 10px;"><img src="docs/icons/accept.svg" alt="add brush" class="icon" width="100"><span>&amp;</span><img src="docs/icons/discard.svg" alt="minus brush" class="icon" width="100"></div><div align="center">These two icons will appear after the image is generated...<br>I love this generated image 😍, I want to keep editing! ➡️ Click ✅ to continue editing<br>What is this thing 😡, I don't want to see it! ➡️ Click ❎ to discard the result<br><br></div><hr><h3 align="center" class="heading">IV. Notes</h3><div align="center"><br><img src="docs/icons/loading.svg" alt="SVG image" class="icon" width="100"></div><div align="center">When you see the spinning icon in the bottom left corner, it means the magicquill is still charging up 💪 Wait for it to disappear before clicking the Run button!<br></div><div align="center"><br><img src="docs/icons/wand.svg" alt="SVG image" class="icon" width="100"></div><div align="center">When the magic wand is flashing, our brush is working hard to guess what you're trying to draw 🤔 Please be patient! 🙏<br><br></div><hr><h3 align="center" class="heading">V. Parameters</h3><div align="center">If you've made it here, you must really love our work! 😍<br>If you want to learn how to better control the generation results, don't miss this section! 😘<br>Next to the Run button, you can select parameters to modify advanced settings 🧐<br><br></div><div><ul><li><u>Base Model Name</u>: Users can adjust this to select appropriate base models for different editing styles<ul><li><a href="https://civitai.com/models/4201/realistic-vision-v60-b1">SD1.5/realisticVisionV60B1_v51VAE.safetensors</a>: This generates realistic style images! Use this most of the time.</li><li><a href="https://civitai.com/models/4384?modelVersionId=128713">SD1.5/DreamShaper.safetensors</a>: This one is for generating fantasy style images</li><li><a href="https://civitai.com/models/43331/majicmix-realistic">SD1.5/majicMIX_realistic</a>: This one is good at generating portraits 👩</li><li><a href="https://civitai.com/models/7240?modelVersionId=948574">SD1.5/MeinaMix.safetensors</a>: This one is good at generating anime images.</li><li><a href="https://civitai.com/models/36520/ghostmix">SD1.5/ghostmix_v20Bakedvae.safetensors</a>: Another model for anime image generation.</li><li>If there are any models you'd like to add, contact us!</li></ul></li><li><u>Negative Prompt</u>: Users can input content they want the model to avoid generating. Whatever you don't want to generate, put it here.</li><li><u>Fine Edge</u>: Users can enable this option to activate fine edge control.</li><li><u>Grow Size</u>: Adjust this parameter to set the pixel range affected around brush strokes when editing images, to expand/reduce the brush stroke influence area.</li><li><u>Edge Strength</u>: Parameter for adjusting the add/subtract brush control strength. Simply put, if you're confident in your drawing skills, you can increase strength. If you're a bad drawer like us 🤦, please keep the parameter as is, or reduce the strength a bit.</li><li><u>Color Strength</u>: Parameter for adjusting the color brush control strength, can adjust the image's coloring effects.</li><li>The remaining parameters are just some common parameters for diffusion models! You basically don't need to manage these, but if you're in the industry/AI art expert, feel free to try adjusting them.</li></ul></div>
-</body>
-</html>
+| Camada | Onde vive | Papel |
+|--------|-----------|-------|
+| **Driver + GPU** | na **máquina** | Driver NVIDIA fornece o CUDA; driver AMD Adrenalin fornece DirectX 12 (base do DirectML) |
+| **PyTorch** | no **`venv/`** | `torch+cu121` = build CUDA (usa NVIDIA). `torch+cpu` **+** `torch-directml` = usa qualquer GPU via DirectML. É aqui que a GPU fica "vinculada" ao ambiente |
+| **Código** | nos `.py` | Genérico: na inicialização lê `USE_DIRECTML` (`gradio_run.py`) e escolhe `torch.cuda` **ou** `torch_directml`. **Nada do código precisa ser editado** para alternar |
 
-## Citation
-Don't forget to cite this source if it proves useful in your research!
-```bibtex
-@article{liu2024magicquill, 
-	title={MagicQuill: An Intelligent Interactive Image Editing System}, 
-	author={Zichen Liu and Yue Yu and Hao Ouyang and Qiuyu Wang and Ka Leong Cheng and Wen Wang and Zhiheng Liu and Qifeng Chen and Yujun Shen}, 
-	year={2024}, 
-	eprint={2411.09703}, 
-	archivePrefix={arXiv}, 
-	primaryClass={cs.CV}}
+```
+rodar.bat (USE_DIRECTML=1)  →  DirectML (AMD)
+sem a variável (padrão)     →  CUDA (NVIDIA)
 ```
 
-## Acknowledgement
-Our implementation is based on 
-- [ComfyUI-BrushNet](https://github.com/nullquant/ComfyUI-BrushNet)
-- [ComfyUI](https://github.com/comfyanonymous/ComfyUI)
-- [LLaVA](https://github.com/haotian-liu/LLaVA)
-- [comfyui_controlnet_aux](https://github.com/Fannovel16/comfyui_controlnet_aux)
-- [ComfyUI_Custom_Nodes_AlekPet](https://github.com/AlekPet/ComfyUI_Custom_Nodes_AlekPet)
-- [fabric.js](https://github.com/fabricjs/fabric.js)
+- **NVIDIA:** CUDA é chamado por padrão — é só rodar `venv\Scripts\python.exe gradio_run.py`.
+- **AMD:** com `rodar.bat` o CUDA **nunca é chamado** (nem é tentado); o programa
+  vai direto para o DirectML e força fp32.
+- ⚠️ **`rodar.bat` numa NVIDIA** → cai em DirectML (funciona, mas ~10× mais
+  lento). ⚠️ **Comando "cru" numa AMD** → o CUDA não existe na placa, o
+  programa cai para a **CPU**. Cada marca usa sempre o seu comando.
+- **O `venv` é específico da máquina** (o `pyvenv.cfg` aponta para o Python
+  local). Ao mudar de PC, **recrie o `venv`** com os passos da
+  [seção 6](#6-instalação--nvidia-cuda) ou [seção 7](#7-instalação--amd-directml) —
+  código e `.bat` vão juntos sem nenhuma alteração.
 
-Thanks for their remarkable contribution and released code!
+---
 
-## Note
-Note: This repo is governed by the license of CC BY-NC 4.0 We strongly advise users not to knowingly generate or allow others to knowingly generate harmful content, including hate speech, violence, pornography, deception, etc. 
+## 3. Requisitos do sistema
 
-(注：本仓库受CC BY-NC的许可协议限制。我们强烈建议，用户不应传播及不应允许他人传播以下内容，包括但不限于仇恨言论、暴力、色情、欺诈相关的有害信息。)
+| Item | Mínimo | Observação |
+|------|--------|------------|
+| Sistema | Windows 10/11 (64 bits) | Linux também funciona (`linux_setup.sh`), mas as instruções abaixo são para Windows |
+| Python | **3.10** | O `venv` deste projeto foi criado com 3.10.11; versões 3.11+ não são compatíveis com os pacotes já instalados |
+| Git | Qualquer | Necessário para clonar com o submódulo LLaVA |
+| GPU | 8 GB VRAM (NVIDIA) ou 6 GB (AMD/DirectML) | Ver [seção 2](#2-compatibilidade-de-gpu) |
+| RAM | 16 GB | ~28 GB se for habilitar o LLaVA |
+| Disco | ~30 GB livres | ~6 GB (`venv`) + ~20 GB (modelos) + projeto |
+
+---
+
+## 4. O que é versionado (o que sobe para o GitHub)
+
+O `.gitignore` deste repositório é curto e direto:
+
+```gitignore
+**/__pycache__/
+.DS_Store
+output/          # imagens geradas
+models/          # pesos de IA (20 GB) — NÃO vão para o GitHub
+venv/            # ambiente Python (6 GB) — NÃO vai
+debug.log
+temp_whl/        # código-fonte da interface
+run_out.log      # logs locais de execução
+run_err.log
+```
+
+**Sobe para o GitHub (~140 arquivos):**
+
+| Conteúdo | Tamanho |
+|----------|---------|
+| Código-fonte (`MagicQuill/`, `gradio_run.py`) | ~1 MB |
+| Interface empacotada `gradio_magicquill-0.0.1-py3-none-any.whl` | incluída no repo (obrigatória para instalar) |
+| Scripts `rodar.bat`, `windows_setup.bat`, `windows_setup_amd.bat`, `linux_setup.sh` | incluídos |
+| Documentação `docs/` (gifs, ícones, vídeo) | ~28 MB |
+| Docker (`Dockerfile`, `docker-compose.yaml`, `docker/`) | incluído |
+| Submódulo `MagicQuill/LLaVA` (aponteiro para `github.com/haotian-liu/LLaVA`) | só o ponteiro |
+
+**NÃO sobe (e você mesmo precisa baixar depois do clone):**
+
+- `models/` — **todos os pesos de IA** ([seção 5](#5-modelos-de-ia--download-e-instalação))
+- `venv/`, `output/`, `__pycache__/`, `debug.log`, `temp_whl/`,
+  `run_out.log`, `run_err.log`
+
+> ℹ️ `temp_whl/` (código-fonte da interface) e os logs de execução também estão
+> no `.gitignore` — antes disso, um simples `git add .` os versionaria por engano.
+
+---
+
+## 5. Modelos de IA — download e instalação
+
+Os modelos **não vão para o GitHub** (20 GB). Após clonar o repositório, é
+obrigatório baixá-los e colocá-los em `models/` exatamente nestes caminhos:
+
+```
+models/
+├── checkpoints/
+│   └── SD1.5/
+│       └── realisticVisionV60B1_v51VAE.safetensors   # 2,0 GB  OBRIGATÓRIO
+├── controlnet/
+│   ├── control_v11p_sd15_scribble.safetensors        # 1,4 GB  OBRIGATÓRIO
+│   └── color_finetune.safetensors                    # 1,4 GB  OBRIGATÓRIO
+├── inpaint/
+│   └── brushnet/
+│       └── random_mask_brushnet_ckpt/
+│           ├── diffusion_pytorch_model.safetensors   # 2,3 GB  OBRIGATÓRIO
+│           └── config.json
+├── preprocessor/
+│   ├── sk_model.pth                                  # 16 MB   OBRIGATÓRIO
+│   ├── sk_model2.pth                                 # 16 MB   OBRIGATÓRIO
+│   └── table5_pidinet.pth                            # 2,7 MB  OBRIGATÓRIO
+├── configs/                                          # 11 YAMLs do ComfyUI
+└── llava-v1.5-7b-finetune-clean/                     # 13,2 GB OPCIONAL*
+```
+
+`*` O LLaVA só é usado pelo **Draw and Guess** (que já vem desligado). Sem ele,
+o MagicQuill funciona por completo — **você digita o prompt na mão**.
+
+**Total:** ≈ **7 GB** sem LLaVA · ≈ **20 GB** com LLaVA.
+
+### Onde baixar
+
+1. **Link oficial (SharePoint dos autores):**
+
+   ```
+   https://hkustconnect-my.sharepoint.com/:u:/g/personal/zliucz_connect_ust_hk/EWlGF0WfawJIrJ1Hn85_-3gB0MtwImAnYeWXuleVQcukMg?e=Gcjugg&download=1
+   ```
+
+   Baixe `models.zip` pelo navegador (cerca de 20 GB) e extraia de modo que a
+   pasta `models/` fique na raiz do repositório.
+
+2. **Espelho no Hugging Face:** [huggingface.co/LiuZichen/MagicQuill-models](https://huggingface.co/LiuZichen/MagicQuill-models)
+   (útil se o link da SharePoint não abrir).
+
+> ⚠️ **Cuidado com o caminho do BrushNet:** os pesos do BrushNet ficam em
+> `models/inpaint/brushnet/random_mask_brushnet_ckpt/` — **não** em
+> `models/brushnet/`. Um README antigo trazia o caminho errado; seguir-o
+> provoca um `KeyError` logo na inicialização. O caminho correto é o da árvore
+> acima (é o que o código lê em `MagicQuill/brushnet_nodes.py`).
+
+> 💡 Usuários da China continental podem usar o espelho:
+> `set HF_ENDPOINT=https://hf-mirror.com` antes de rodar.
+
+---
+
+## 6. Instalação — NVIDIA (CUDA)
+
+Testado com **Python 3.10.11 + PyTorch 2.2.1 (CUDA 12.1)** em uma RTX 3060 12 GB.
+
+```bat
+:: 1. Clonar com o submódulo LLaVA (o --recursive é obrigatório)
+git clone --recursive https://github.com/magic-quill/MagicQuill.git
+cd MagicQuill
+
+:: 2. Criar o ambiente virtual (venv)
+python -m venv venv
+venv\Scripts\activate
+
+:: 3. Instalar o PyTorch com suporte a GPU NVIDIA
+pip install torch==2.2.1 torchvision==0.17.1 --index-url https://download.pytorch.org/whl/cu121
+:: Alternativa (instrução original dos autores, CUDA 11.8):
+:: pip install torch==2.1.2 torchvision==0.16.2 --index-url https://download.pytorch.org/whl/cu118
+
+:: 4. Instalar a interface gráfica (wheel já vem no repositório)
+pip install gradio_magicquill-0.0.1-py3-none-any.whl
+
+:: 5. Instalar o LLaVA (necessário mesmo se você não for usar o Draw and Guess)
+copy /Y pyproject.toml MagicQuill\LLaVA\
+pip install -e MagicQuill\LLaVA\
+
+:: 6. Instalar as dependências restantes
+pip install -r requirements.txt
+```
+
+**Verificar se a GPU foi reconhecida:**
+
+```bat
+python -c "import torch; print(torch.__version__, torch.cuda.is_available(), torch.cuda.get_device_name(0))"
+```
+
+Deve imprimir algo como `2.2.1+cu121 True NVIDIA GeForce RTX 3060`.
+
+---
+
+## 7. Instalação — AMD (DirectML)
+
+Testado com a **AMD RX 580 (6 GB VRAM)** — *rodava normalmente nesta placa*.
+A única diferença em relação à NVIDIA são os passos 3 e a forma de rodar.
+
+```bat
+git clone --recursive https://github.com/magic-quill/MagicQuill.git
+cd MagicQuill
+python -m venv venv
+venv\Scripts\activate
+
+:: 3a. PyTorch de CPU + plugin DirectML (é assim que funciona a AMD no Windows)
+pip install torch==2.2.1 torchvision==0.17.1 --index-url https://download.pytorch.org/whl/cpu
+pip install torch-directml
+pip install torchsde==0.2.6
+
+:: 4, 5 e 6 — iguais à NVIDIA (wheel, LLaVA, requirements)
+pip install gradio_magicquill-0.0.1-py3-none-any.whl
+copy /Y pyproject.toml MagicQuill\LLaVA\
+pip install -e MagicQuill\LLaVA\
+pip install -r requirements.txt
+```
+
+**Verificar se a AMD foi reconhecida:**
+
+```bat
+python -c "import torch_directml; print(torch_directml.device_name(0))"
+```
+
+Deve imprimir algo como `AMD Radeon RX 580 Series`.
+
+### Sobre o `windows_setup_amd.bat`
+
+Ele **não cria o ambiente sozinho**: apenas troca o PyTorch CUDA por
+PyTorch-CPU + `torch-directml` dentro de um `venv` **já existente** e inicia o
+programa. Ou seja, rode os passos 1, 2, 4, 5 e 6 acima e use o `.bat` só para
+o passo 3 — ou faça tudo manualmente, como acima.
+
+### Sobre o `windows_setup.bat` (NVIDIA)
+
+Script legado dos autores: cria ambiente **Conda** e instala `cu118`. Só
+funciona se você tiver o Conda instalado; para o setup com `venv` descrito
+neste README, siga a [seção 6](#6-instalação--nvidia-cuda) manualmente.
+
+---
+
+## 8. Como rodar
+
+O programa é um servidor local (FastAPI + Gradio) que abre no navegador.
+
+### NVIDIA (CUDA)
+
+```bat
+venv\Scripts\activate
+set USE_DIRECTML=0
+venv\Scripts\python.exe gradio_run.py
+```
+
+Aparecerá no console:
+
+```
+[MagicQuill] Running in default CUDA mode. Set USE_DIRECTML=1 to enable AMD GPU via DirectML.
+Device: cuda:0 NVIDIA GeForce RTX 3060 : native
+INFO:     Uvicorn running on http://127.0.0.1:7860
+```
+
+### AMD (DirectML)
+
+```bat
+rodar.bat
+```
+
+(O `rodar.bat` apenas define `USE_DIRECTML=1` e chama o mesmo `gradio_run.py`.)
+
+Aparecerá:
+
+```
+[MagicQuill] DirectML enabled for AMD GPU support.
+[MagicQuill] DirectML detected: using float32 for BrushNet (fp16 unstable on AMD Polaris)
+```
+
+### Abrindo a interface
+
+Depois que aparecer `Uvicorn running`, abra no navegador:
+
+```
+http://127.0.0.1:7860
+```
+
+O primeiro carregamento dos modelos leva de **30 s a 2 min**. Para encerrar,
+feche o terminal ou pressione `Ctrl+C`.
+
+> ⚠️ **Não use `rodar.bat` numa placa NVIDIA** — ele força o modo DirectML
+> (mais lento e exige o pacote `torch-directml` instalado). Em NVIDIA, use
+> sempre o comando do modo CUDA. Inversamente, para AMD use sempre
+> `rodar.bat`, nunca o comando CUDA.
+>
+> A porta está fixada em `127.0.0.1:7860` (`gradio_run.py`) e todos os flags de
+> linha de comando (`--port`, `--cpu`, `--force-fp32`…) são ignorados pelo
+> código — não há como mudá-los sem editar o programa.
+
+---
+
+## 9. Interface e parâmetros
+
+**Barra lateral de parâmetros (accordion *parameters*):**
+
+| Parâmetro | Padrão | O que faz / observação |
+|-----------|--------|------------------------|
+| Base Model Name | `SD1.5/realisticVisionV60B1_v51VAE.safetensors` | Modelo base (só existe um por padrão) |
+| Auto Save | desligado | Grava cada resultado em `output\magicquill_AAAA-MM-DD_HH-MM-SS.png` |
+| Resolution | slider 512 (**uso real 384**) | Define o redimensionamento da imagem **enviada** — ajuste **antes** de subir a imagem. O valor efetivo só muda depois que você mexe no slider |
+| Negative Prompt | vazio | O que a imagem **não** deve conter |
+| Fine Edge | `disable` | Usa LineArt fino em vez do pré-processador de scribble |
+| Grow Size | 15 | Dilata a área afetada pela máscara |
+| Edge Strength | 0.55 | Força do ControlNet de traços (0–5) |
+| Color Strength | 0.55 | Força do ControlNet de cor (0–5) |
+| Inpaint Strength | 1.0 | Força do BrushNet (0–5) |
+| Seed | −1 (aleatório) | Fixa o resultado para reproduzir a geração |
+| Steps | 20 | **Use sempre números inteiros** (ver [seção 14](#14-pontos-de-atenção-análise-estática-do-código)) |
+| CFG | 5.0 | Peso do prompt |
+| Sampler / Scheduler | `euler_ancestral` / `karras` | Algoritmo de amostragem |
+
+**Comportamentos que valem saber:**
+
+- `Auto Save` e `Resolution` são **globais** — valem para todas as abas abertas
+  ao mesmo tempo.
+- A imagem de máscara precisa ter **canal alfa (transparência)**; sem ele a
+  máscara é considerada vazia e a geração não altera nada.
+- Imagem original, máscara e imagem colorida precisarão ter o **mesmo tamanho**.
+- Se a geração falhar, o erro aparece só no console — a interface apenas não
+  retorna imagem.
+
+---
+
+## 10. Draw and Guess (LLaVA)
+
+O modelo **LLaVA-7B** escreve o prompt automaticamente a partir dos seus traços.
+
+- **Vem DESLIGADO por padrão** (`ENABLE_LLAVA=0`), porque carrega ~13 GB de
+  pesos e precisa de **~28 GB de RAM** para rodar em fp32.
+- Roda **na CPU**, mesmo com NVIDIA — cada clique na varinha leva **30 s a 2 min**.
+
+Para ligar:
+
+```bat
+set ENABLE_LLAVA=1
+venv\Scripts\python.exe gradio_run.py
+```
+
+Sem ele, é só digitar o prompt no campo de texto — o restante do programa não
+é afetado. O download da pasta `llava-v1.5-7b-finetune-clean/` (13,2 GB) só é
+necessário se você for usar este recurso.
+
+---
+
+## 11. Estrutura técnica do código
+
+```
+MagicQuill/                     # núcleo do programa (usa o ComfyUI embutido)
+├── comfy/                      # fork do ComfyUI (samplers, model_management, cli_args…)
+│   ├── model_management.py     # seleção de device: CUDA / DirectML / CPU, VRAM, fp16/fp32/fp8
+│   ├── options.py              # lê USE_DIRECTML / AMD_GPU e habilita o parsing de argumentos
+│   └── samplers.py, sd.py…     # amostragem e VAE
+├── brushnet/                   # implementação do BrushNet (inpainting)
+├── brushnet_nodes.py           # nós: carregar/aplicar BrushNet e ControlNets
+├── comfyui_utils.py            # nós de alto nível: Checkpoint, ControlNet, KSampler, VAE,
+│                               #   pré-processadores (PIDINet/LineArt/Color)
+├── scribble_color_edit.py      # orquestra o pipeline completo (carrega tudo no __init__)
+├── llava_new.py                # wrapper do LLaVA (fixo em CPU/fp32)
+├── model_patch.py              # monkeypatch do ComfyUI p/ injetar o BrushNet
+├── folder_paths.py             # localização das pastas de modelos
+└── LLaVA/                      # submódulo (github.com/haotian-liu/LLaVA)
+
+gradio_run.py                   # entrada do programa: UI + rotas + servidor
+gradio_magicquill-*.whl         # componente Gradio da interface (empacotado)
+temp_whl/                       # código-fonte da wheel (ignorado pelo Git)
+rodar.bat                       # roda em DirectML (AMD)
+windows_setup*.bat, linux_setup.sh
+```
+
+**Fluxo de execução:**
+
+1. `gradio_run.py` importa `ScribbleColorEditModel` → carrega checkpoint,
+   ControlNets e BrushNet para a GPU (o console mostra "BrushNet SD1.5 model is loaded").
+2. A UI Gradio monta os controles e o FastAPI expõe duas rotas locais:
+   - `POST /magic_quill/guess_prompt` — chama o LLaVA (ou devolve `""` se desligado);
+   - `POST /magic_quill/process_background_img` — redimensiona a imagem enviada.
+3. Ao clicar em **Run**, `generate()` prepara imagens/máscaras e chama
+   `ScribbleColorEditModel.process()`: pré-processadores → ControlNets →
+   BrushNet → KSampler → VAE → blending → imagem final em base64.
+4. `uvicorn` serve tudo em `127.0.0.1:7860`.
+
+**Versões verificadas neste ambiente:** Python 3.10.11 · PyTorch 2.2.1 ·
+Gradio 5.4.0 · diffusers 0.31.0 · transformers 4.37.2 · accelerate 0.33.0 ·
+opencv-python 4.10.0.84 · `gradio_magicquill` 0.0.1.
+
+---
+
+## 12. Desempenho esperado
+
+| Operação | AMD RX 580 6 GB (DirectML, fp32) | NVIDIA CUDA (fp16/fp8) |
+|----------|----------------------------------|-------------------------|
+| Carga inicial dos modelos | 30–90 s | 30–60 s |
+| Geração 512×512, 20 steps | ~30–90 s | ~5 s |
+| Geração 1024×1024 | 2–5 min | ~15–30 s |
+| Draw and Guess (LLaVA, CPU) | 30 s–2 min | 30 s–2 min |
+
+> DirectML + fp32 é algo entre 10× e 20× mais lento que CUDA + fp16 — é o
+> custo de não ter ROCm no Windows. Para acelerar na AMD, reduza a resolução e
+> o número de steps.
+
+---
+
+## 13. Solução de problemas
+
+| Sintoma | Causa provável | Solução |
+|---------|----------------|---------|
+| `ImportError: No module named 'torch_directml'` ao rodar `rodar.bat` | Ambiente NVIDIA sem o pacote DirectML | Use o comando CUDA da [seção 8](#8-como-rodar) (não o `rodar.bat`) |
+| `[MagicQuill] Running in default CUDA mode` mas você tem AMD | `USE_DIRECTML` não definido | Rode via `rodar.bat` |
+| A imagem gerada não muda nada | Máscara sem canal alfa, ou prompt vazio | Exporte a máscara com transparência; escreva um prompt |
+| `KeyError`/`TypeError` logo na inicialização | Pasta de modelos incompleta ou BrushNet no caminho errado | Conferir a árvore da [seção 5](#5-modelos-de-ia--download-e-instalação) |
+| Imagem saiu toda preta | fp16 em GPU AMD | Em DirectML o código já força fp32; se continuar, feche outros programas que usem VRAM |
+| `out of memory` | Resolução/steps altos demais | Reduza Resolution (ex.: 512) e feche jogos/navegador |
+| Erro `0xc0000006` ou "Windows não pode acessar o arquivo …safetensors" | Falha de leitura do **disco** (setor defeituoso/cabo) | Verifique o disco (`chkdsk D: /scan`), SMART e cabo SATA — **não é erro do MagicQuill** |
+| Erro `TypeError` mencionando `range()`/`linspace` ao gerar | Steps fracionário (ex.: 25.5) | Já corrigido no código (slider inteiro) — atualize se seu clone for antigo |
+| Draw and Guess devolve prompt vazio | LLaVA desligado (padrão) ou RAM insuficiente | `set ENABLE_LLAVA=1` com ~28 GB de RAM |
+| Downloads do Hugging Face falham | Restrição de rede | `set HF_ENDPOINT=https://hf-mirror.com` |
+
+Guias adicionais de troubleshooting AMD (DirectML, OOM, fp16, drivers):
+**[`README_AMD_RX580.md`](README_AMD_RX580.md)** — *atenção: esse guia é mais
+antigo que este README e ainda menciona Conda e caminhos desatualizados; em caso
+de divergência, siga este README.*
+
+---
+
+## 14. Pontos de atenção (análise estática do código)
+
+Levantamento feito **sem alterar o código** — nada abaixo foi corrigido, são
+comportamentos reais do programa como está hoje:
+
+1. **Steps fracionário quebra a geração** — ✅ **corrigido**: o slider ganhou
+   `step=1` e `generate()` converte `steps` para inteiro. Valores fracionários
+   causavam `TypeError` dentro do sampler.
+2. **Prompt inicialmente nulo** — ✅ **corrigido**: um prompt `null` vindo da
+   interface agora é convertido em `""` antes de chegar ao encoder.
+3. **Sem validação de imagem/máscara** — ⚠️ **parcial**: se a máscara total
+   ficar vazia (sem canal alfa / sem traços) o console agora avisa antes da
+   geração; tamanhos divergentes entre imagem e máscara ainda falham, com o
+   erro apenas no terminal.
+4. **Erros engolidos** — mantido por design (a UI não derruba por exceção);
+   **sempre olhe o terminal** quando algo falhar.
+5. **`except:` em `MagicQuill/model_patch.py` chamava `print.warning`**
+   (inexistente em Python) — ✅ **corrigido**: agora captura a exceção e imprime
+   com `print`, informando o formato dos tensores.
+6. **UNet em fp8 por padrão em CUDA** (`--fp8_e4m3fn-unet` vem com
+   `default=True` em `MagicQuill/comfy/cli_args.py`) — mantido: funciona e
+   economiza VRAM na RTX; é uma diferença em relação ao ComfyUI padrão.
+7. **Fallback de OOM do VAE só existe para CUDA** — mantido (alterar o caminho
+   de DirectML/AMD era arriscado); em AMD, reduza resolução para evitar OOM.
+8. **Código morto** — ✅ **parcialmente limpo**: removidos os imports sem uso
+   (`subprocess`, `requests`, `io` duplicado), o rádio `stroke_as_edge`
+   comentado, o comentário de rota morta e o argumento `progress` (que caía na
+   posição errada do parâmetro `base_model_version` de `process()`). Permanecem,
+   por segurança, nodes nunca chamados (`PowerPaint`, `CutForInpaint`) e ramos
+   `stroke_as_edge=disable` inalcançáveis.
+9. **`temp_whl/` não estava ignorado** pelo Git — ✅ **corrigido** no
+   `.gitignore` (junto com `run_out.log`/`run_err.log`).
+10. **Duas instâncias de `folder_paths`** convivem no processo — mantido:
+    funciona, mas a ordem dos imports é frágil (`scribble_color_edit.py`
+    compensa com `sys.path.append`).
+11. **Porta/host fixos** e flags de CLI ignorados — mantido, comportamento
+    documentado na [seção 8](#8-como-rodar).
+
+---
+
+## 15. Licença e citação
+
+### Licença
+
+O código está sob **CC BY-NC 4.0** ([LICENSE](LICENSE)) — **uso não comercial**.
+(O badge antigo dizia CC BY-SA 4.0; o arquivo `LICENSE` manda.)
+
+Ao publicar resultados derivados, inclua a atribuição aos autores originais.
+
+### Citação
+
+```bibtex
+@inproceedings{liu2025magicquill,
+  title     = {MagicQuill: An Intelligent Interactive Image Editing System},
+  author    = {Zichen Liu and Yue Yu and Hao Ouyang and Qiuyu Wang and Ka Leong Cheng
+               and Wen Wang and Zhiheng Liu and Qifeng Chen and Yujun Shen},
+  booktitle = {CVPR},
+  year      = {2025},
+  eprint    = {2411.09703},
+  archivePrefix = {arXiv}
+}
+```
+
+### Agradecimentos
+
+Implementação baseada em
+[ComfyUI-BrushNet](https://github.com/nullquant/ComfyUI-BrushNet) ·
+[ComfyUI](https://github.com/comfyanonymous/ComfyUI) ·
+[LLaVA](https://github.com/haotian-liu/LLaVA) ·
+[comfyui_controlnet_aux](https://github.com/Fannovel16/comfyui_controlnet_aux) ·
+[fabric.js](https://github.com/fabricjs/fabric.js)
+
+Paper original: [arXiv:2411.09703](https://arxiv.org/abs/2411.09703) ·
+Site: [magicquill.art](https://magicquill.art/) ·
+V2: [magicquill.art/v2](https://magicquill.art/v2/)

@@ -1,6 +1,12 @@
-# MagicQuill — Guia para AMD RX 580 (8GB VRAM) via DirectML
+# MagicQuill — Guia para AMD RX 580 via DirectML
 
-Este guia explica como rodar o MagicQuill em uma **AMD RX 580** (ou outras placas AMD
+> 📌 **Guia complementar de troubleshooting AMD.** A instalação canônica
+> (NVIDIA **e** AMD, com `venv`) está no [`README.md`](README.md) — em caso de
+> divergência entre os dois documentos, **siga o README.md**. Este arquivo
+> mantém os detalhes de DirectML, limitações da RX 580 e solução de problemas.
+
+Este guia explica como rodar o MagicQuill em uma **AMD RX 580**
+(testada com **6 GB de VRAM** — rodava normalmente) ou outras placas AMD
 Polaris/Vega/RDNA não suportadas pelo ROCm no Windows) usando **DirectML**.
 
 > ⚠️ **Importante:** A RX 580 não é suportada pelo ROCm (só no Linux e só para
@@ -28,10 +34,10 @@ Polaris/Vega/RDNA não suportadas pelo ROCm no Windows) usando **DirectML**.
 ## 📦 Pré-requisitos
 
 1. **Windows 10/11** com driver AMD atualizado (Adrenalin mais recente).
-2. **Python 3.10** via Conda (Miniconda ou Anaconda).
+2. **Python 3.10** (com `venv`, recomendado — ver `README.md` — ou Conda).
 3. **Git** instalado.
 4. ~**20 GB livres** em disco (modelos + dependências).
-5. Os modelos do MagicQuill já baixados (colocar em `models/` conforme o README original).
+5. Os modelos do MagicQuill já baixados (caminhos exatos no [`README.md` — Modelos de IA](README.md#5-modelos-de-ia--download-e-instalação)).
 
 ---
 
@@ -43,22 +49,24 @@ Polaris/Vega/RDNA não suportadas pelo ROCm no Windows) usando **DirectML**.
 windows_setup_amd.bat
 ```
 
-O script cria o environment Conda, instala PyTorch + DirectML e inicia o MagicQuill.
+O script **não cria o ambiente**: ele exige um `venv` já criado, instala dentro
+dele o PyTorch (CPU) + DirectML e inicia o MagicQuill. Os passos 1, 3 e 4 abaixo
+(wheel, LLaVA, `requirements.txt`) continuam sendo necessários.
 
 ### Opção B — Manual
 
-#### 1. Criar environment Conda
+#### 1. Criar o ambiente virtual
 ```bat
-conda create -n MagicQuill python=3.10 -y
-conda activate MagicQuill
-conda init cmd.exe
+python -m venv venv
+venv\Scripts\activate
 ```
-Feche e abra o terminal de novo após o `conda init`.
+(Alternativa Conda: `conda create -n MagicQuill python=3.10 -y` + `conda activate MagicQuill`.)
 
 #### 2. Instalar PyTorch (CPU) + DirectML
 ```bat
-pip install torch==2.1.2 torchvision==0.16.2 --index-url https://download.pytorch.org/whl/cpu
+pip install torch==2.2.1 torchvision==0.17.1 --index-url https://download.pytorch.org/whl/cpu
 pip install torch-directml
+pip install torchsde==0.2.6
 ```
 
 Verifique se o DirectML detectou sua RX 580:
@@ -114,7 +122,7 @@ Principais alterações feitas para suportar DirectML/AMD:
 - No Windows 7/8 o DirectML **não funciona** (precisa Win10+).
 
 ### Erro de memória (OOM) / imagem preta
-- A RX 580 tem 8GB. Em fp32 tudo pesa o dobro. Se ocorrer OOM:
+- A RX 580 de referência tem 6 GB de VRAM. Em fp32 tudo pesa o dobro. Se ocorrer OOM:
   - Reduza a resolução da imagem (ex: 768×768 em vez de 1024×1024).
   - Feche outros apps que usem VRAM (navegador, jogos).
 - **Imagem preta** geralmente indica NaN por causa de fp16 — já ajustado pra fp32 automaticamente.
@@ -128,8 +136,11 @@ Principais alterações feitas para suportar DirectML/AMD:
 - Solução: `last_layer_index` agora usa `isinstance` — já aplicado no `brushnet_nodes.py`.
 
 ### LLaVA muito lento (Draw and Guess)
-- O LLaVA roda na CPU e pode levar até 2 minutos por inferência. Pra desativar:
-  - Na interface, clique no ícone de **varinha mágica** (wand) pra desligar o preenchimento automático de prompt, e digite o prompt manualmente.
+- O Draw and Guess vem **desligado por padrão** (`ENABLE_LLAVA=0`) — não é
+  preciso desligar nada na interface.
+- Para ativar, rode com `set ENABLE_LLAVA=1` (exige ~28 GB de RAM; roda na CPU,
+  30 s – 2 min por inferência). Sem ele, digite o prompt manualmente —
+  ver [`README.md` — Draw and Guess](README.md#10-draw-and-guess-llava).
 
 ### Erro `device_map` / `accelerate`
 - Já corrigido: o BrushNet agora carrega via `load_state_dict` no DirectML.
