@@ -146,6 +146,7 @@ sem a variável (padrão)     →  CUDA (NVIDIA)
 | Python | **3.10** | O `venv` deste projeto foi criado com 3.10.11; versões 3.11+ não são compatíveis com os pacotes já instalados |
 | Git | Qualquer | Necessário para clonar com o submódulo LLaVA |
 | GPU | 8 GB VRAM (NVIDIA) ou 6 GB (AMD/DirectML) | Ver [seção 2](#2-compatibilidade-de-gpu) |
+| Driver da GPU | **Atualizado** | NVIDIA: driver GeForce · AMD: Software Adrenalin. O DirectML exige driver recente — instale/atualize **antes** de clonar |
 | RAM | 16 GB | ~28 GB se for habilitar o LLaVA |
 | Disco | ~30 GB livres | ~6 GB (`venv`) + ~20 GB (modelos) + projeto |
 
@@ -250,9 +251,9 @@ o MagicQuill funciona por completo — **você digita o prompt na mão**.
 Testado com **Python 3.10.11 + PyTorch 2.2.1 (CUDA 12.1)** em uma RTX 3060 12 GB.
 
 ```bat
-:: 1. Clonar com o submódulo LLaVA (o --recursive é obrigatório)
-git clone --recursive https://github.com/magic-quill/MagicQuill.git
-cd MagicQuill
+:: 1. Clonar ESTA fork com o submódulo LLaVA (o --recursive é obrigatório)
+git clone --recursive https://github.com/Rickiesla/MagicQuill-DualGPU.git
+cd MagicQuill-DualGPU
 
 :: 2. Criar o ambiente virtual (venv)
 python -m venv venv
@@ -290,8 +291,9 @@ Testado com a **AMD RX 580 (6 GB VRAM)** — *rodava normalmente nesta placa*.
 A única diferença em relação à NVIDIA são os passos 3 e a forma de rodar.
 
 ```bat
-git clone --recursive https://github.com/magic-quill/MagicQuill.git
-cd MagicQuill
+:: Clonar ESTA fork (contém o suporte AMD/DirectML — o repo oficial não tem)
+git clone --recursive https://github.com/Rickiesla/MagicQuill-DualGPU.git
+cd MagicQuill-DualGPU
 python -m venv venv
 venv\Scripts\activate
 
