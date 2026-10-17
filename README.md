@@ -29,7 +29,7 @@ interativo de edição de imagens com inteligência artificial *(CVPR 2025)*,
 >
 > **Testado em:** AMD RX 580 6 GB (DirectML) e NVIDIA RTX 3060 12 GB (CUDA).
 > Créditos do projeto original, paper e licença continuam sendo dos autores
-> originais (ver [seção 15](#15-licença-e-citação)).
+> originais (ver [seção 14](#14-licença-e-citação)).
 
 > O MagicQuill transforma traços desenhados à mão em edições precisas de imagem.
 > Basta desenhar sobre a foto, escrever um prompt e deixar a IA preencher o resto —
@@ -49,18 +49,17 @@ Vídeo: [YouTube](https://www.youtube.com/watch?v=5DiKfONMnE4)
 1. [O que é o projeto](#1-o-que-é-o-projeto)
 2. [Compatibilidade de GPU](#2-compatibilidade-de-gpu)
 3. [Requisitos do sistema](#3-requisitos-do-sistema)
-4. [O que é versionado (o que sobe para o GitHub)](#4-o-que-é-versionado-o-que-sobe-para-o-github)
-5. [Modelos de IA — download e instalação](#5-modelos-de-ia--download-e-instalação)
-6. [Instalação — NVIDIA (CUDA)](#6-instalação--nvidia-cuda)
-7. [Instalação — AMD (DirectML)](#7-instalação--amd-directml)
-8. [Como rodar](#8-como-rodar)
-9. [Interface e parâmetros](#9-interface-e-parâmetros)
-10. [Draw and Guess (LLaVA)](#10-draw-and-guess-llava)
-11. [Estrutura técnica do código](#11-estrutura-técnica-do-código)
-12. [Desempenho esperado](#12-desempenho-esperado)
-13. [Solução de problemas](#13-solução-de-problemas)
-14. [Pontos de atenção (análise estática do código)](#14-pontos-de-atenção-análise-estática-do-código)
-15. [Licença e citação](#15-licença-e-citação)
+4. [Modelos de IA — download e instalação](#4-modelos-de-ia--download-e-instalação)
+5. [Instalação — NVIDIA (CUDA)](#5-instalação--nvidia-cuda)
+6. [Instalação — AMD (DirectML)](#6-instalação--amd-directml)
+7. [Como rodar](#7-como-rodar)
+8. [Interface e parâmetros](#8-interface-e-parâmetros)
+9. [Draw and Guess (LLaVA)](#9-draw-and-guess-llava)
+10. [Estrutura técnica do código](#10-estrutura-técnica-do-código)
+11. [Desempenho esperado](#11-desempenho-esperado)
+12. [Solução de problemas](#12-solução-de-problemas)
+13. [Pontos de atenção (análise estática do código)](#13-pontos-de-atenção-análise-estática-do-código)
+14. [Licença e citação](#14-licença-e-citação)
 
 ---
 
@@ -79,7 +78,7 @@ interface web desenhada para desenho à mão:
 
 Além disso, o botão **Draw and Guess** (varinha mágica) usa um modelo LLaVA-7B
 para *escrever o prompt automaticamente* a partir dos seus traços — **desligado
-por padrão** por ser pesado (ver [seção 10](#10-draw-and-guess-llava)).
+por padrão** por ser pesado (ver [seção 9](#9-draw-and-guess-llava)).
 
 **Fluxo de trabalho:** suba uma imagem → desenhe os traços → (opcional) gere o
 prompt → ajuste os parâmetros → **Run** → a imagem editada aparece, com opção de
@@ -103,7 +102,7 @@ salvar automaticamente.
 Notas importantes:
 
 - **CUDA e DirectML são caminhos de arranque diferentes** — o mesmo comando não
-  serve para as duas marcas (detalhes na [seção 8](#8-como-rodar)).
+  serve para as duas marcas (detalhes na [seção 7](#7-como-rodar)).
 - A RX 580 **não é suportada pelo ROCm no Windows**; o DirectML é a única via.
   Em DirectML o modelo roda em **fp32** (o fp16 gera imagens pretas/NaN em
   GPUs Polaris), por isso é naturalmente mais lento que CUDA.
@@ -133,7 +132,7 @@ sem a variável (padrão)     →  CUDA (NVIDIA)
   programa cai para a **CPU**. Cada marca usa sempre o seu comando.
 - **O `venv` é específico da máquina** (o `pyvenv.cfg` aponta para o Python
   local). Ao mudar de PC, **recrie o `venv`** com os passos da
-  [seção 6](#6-instalação--nvidia-cuda) ou [seção 7](#7-instalação--amd-directml) —
+  [seção 5](#5-instalação--nvidia-cuda) ou [seção 6](#6-instalação--amd-directml) —
   código e `.bat` vão juntos sem nenhuma alteração.
 
 ---
@@ -152,45 +151,7 @@ sem a variável (padrão)     →  CUDA (NVIDIA)
 
 ---
 
-## 4. O que é versionado (o que sobe para o GitHub)
-
-O `.gitignore` deste repositório é curto e direto:
-
-```gitignore
-**/__pycache__/
-.DS_Store
-output/          # imagens geradas
-models/          # pesos de IA (20 GB) — NÃO vão para o GitHub
-venv/            # ambiente Python (6 GB) — NÃO vai
-debug.log
-temp_whl/        # código-fonte da interface
-run_out.log      # logs locais de execução
-run_err.log
-```
-
-**Sobe para o GitHub (~140 arquivos):**
-
-| Conteúdo | Tamanho |
-|----------|---------|
-| Código-fonte (`MagicQuill/`, `gradio_run.py`) | ~1 MB |
-| Interface empacotada `gradio_magicquill-0.0.1-py3-none-any.whl` | incluída no repo (obrigatória para instalar) |
-| Scripts `rodar.bat`, `windows_setup.bat`, `windows_setup_amd.bat`, `linux_setup.sh` | incluídos |
-| Documentação `docs/` (gifs, ícones, vídeo) | ~28 MB |
-| Docker (`Dockerfile`, `docker-compose.yaml`, `docker/`) | incluído |
-| Submódulo `MagicQuill/LLaVA` (aponteiro para `github.com/haotian-liu/LLaVA`) | só o ponteiro |
-
-**NÃO sobe (e você mesmo precisa baixar depois do clone):**
-
-- `models/` — **todos os pesos de IA** ([seção 5](#5-modelos-de-ia--download-e-instalação))
-- `venv/`, `output/`, `__pycache__/`, `debug.log`, `temp_whl/`,
-  `run_out.log`, `run_err.log`
-
-> ℹ️ `temp_whl/` (código-fonte da interface) e os logs de execução também estão
-> no `.gitignore` — antes disso, um simples `git add .` os versionaria por engano.
-
----
-
-## 5. Modelos de IA — download e instalação
+## 4. Modelos de IA — download e instalação
 
 Os modelos **não vão para o GitHub** (20 GB). Após clonar o repositório, é
 obrigatório baixá-los e colocá-los em `models/` exatamente nestes caminhos:
@@ -246,7 +207,7 @@ o MagicQuill funciona por completo — **você digita o prompt na mão**.
 
 ---
 
-## 6. Instalação — NVIDIA (CUDA)
+## 5. Instalação — NVIDIA (CUDA)
 
 Testado com **Python 3.10.11 + PyTorch 2.2.1 (CUDA 12.1)** em uma RTX 3060 12 GB.
 
@@ -273,6 +234,8 @@ pip install -e MagicQuill\LLaVA\
 
 :: 6. Instalar as dependências restantes
 pip install -r requirements.txt
+
+:: 7. Baixar os modelos de IA — obrigatório, eles NÃO vêm no clone (ver seção 4)
 ```
 
 **Verificar se a GPU foi reconhecida:**
@@ -285,7 +248,7 @@ Deve imprimir algo como `2.2.1+cu121 True NVIDIA GeForce RTX 3060`.
 
 ---
 
-## 7. Instalação — AMD (DirectML)
+## 6. Instalação — AMD (DirectML)
 
 Testado com a **AMD RX 580 (6 GB VRAM)** — *rodava normalmente nesta placa*.
 A única diferença em relação à NVIDIA são os passos 3 e a forma de rodar.
@@ -307,6 +270,8 @@ pip install gradio_magicquill-0.0.1-py3-none-any.whl
 copy /Y pyproject.toml MagicQuill\LLaVA\
 pip install -e MagicQuill\LLaVA\
 pip install -r requirements.txt
+
+:: 7. Baixar os modelos de IA — obrigatório, eles NÃO vêm no clone (ver seção 4)
 ```
 
 **Verificar se a AMD foi reconhecida:**
@@ -328,13 +293,17 @@ o passo 3 — ou faça tudo manualmente, como acima.
 
 Script legado dos autores: cria ambiente **Conda** e instala `cu118`. Só
 funciona se você tiver o Conda instalado; para o setup com `venv` descrito
-neste README, siga a [seção 6](#6-instalação--nvidia-cuda) manualmente.
+neste README, siga a [seção 5](#5-instalação--nvidia-cuda) manualmente.
 
 ---
 
-## 8. Como rodar
+## 7. Como rodar
 
 O programa é um servidor local (FastAPI + Gradio) que abre no navegador.
+
+> ⚠️ **Antes de rodar:** os pesos da IA precisam estar em `models/` — se ainda
+> não baixou, faça a [seção 4](#4-modelos-de-ia--download-e-instalação). Sem eles
+> a inicialização falha com `KeyError`/`FileNotFoundError`.
 
 ### NVIDIA (CUDA)
 
@@ -389,7 +358,7 @@ feche o terminal ou pressione `Ctrl+C`.
 
 ---
 
-## 9. Interface e parâmetros
+## 8. Interface e parâmetros
 
 **Barra lateral de parâmetros (accordion *parameters*):**
 
@@ -405,7 +374,7 @@ feche o terminal ou pressione `Ctrl+C`.
 | Color Strength | 0.55 | Força do ControlNet de cor (0–5) |
 | Inpaint Strength | 1.0 | Força do BrushNet (0–5) |
 | Seed | −1 (aleatório) | Fixa o resultado para reproduzir a geração |
-| Steps | 20 | **Use sempre números inteiros** (ver [seção 14](#14-pontos-de-atenção-análise-estática-do-código)) |
+| Steps | 20 | **Use sempre números inteiros** (ver [seção 13](#13-pontos-de-atenção-análise-estática-do-código)) |
 | CFG | 5.0 | Peso do prompt |
 | Sampler / Scheduler | `euler_ancestral` / `karras` | Algoritmo de amostragem |
 
@@ -421,7 +390,7 @@ feche o terminal ou pressione `Ctrl+C`.
 
 ---
 
-## 10. Draw and Guess (LLaVA)
+## 9. Draw and Guess (LLaVA)
 
 O modelo **LLaVA-7B** escreve o prompt automaticamente a partir dos seus traços.
 
@@ -442,7 +411,7 @@ necessário se você for usar este recurso.
 
 ---
 
-## 11. Estrutura técnica do código
+## 10. Estrutura técnica do código
 
 ```
 MagicQuill/                     # núcleo do programa (usa o ComfyUI embutido)
@@ -485,7 +454,7 @@ opencv-python 4.10.0.84 · `gradio_magicquill` 0.0.1.
 
 ---
 
-## 12. Desempenho esperado
+## 11. Desempenho esperado
 
 | Operação | AMD RX 580 6 GB (DirectML, fp32) | NVIDIA CUDA (fp16/fp8) |
 |----------|----------------------------------|-------------------------|
@@ -500,14 +469,14 @@ opencv-python 4.10.0.84 · `gradio_magicquill` 0.0.1.
 
 ---
 
-## 13. Solução de problemas
+## 12. Solução de problemas
 
 | Sintoma | Causa provável | Solução |
 |---------|----------------|---------|
-| `ImportError: No module named 'torch_directml'` ao rodar `rodar.bat` | Ambiente NVIDIA sem o pacote DirectML | Use o comando CUDA da [seção 8](#8-como-rodar) (não o `rodar.bat`) |
+| `ImportError: No module named 'torch_directml'` ao rodar `rodar.bat` | Ambiente NVIDIA sem o pacote DirectML | Use o comando CUDA da [seção 7](#7-como-rodar) (não o `rodar.bat`) |
 | `[MagicQuill] Running in default CUDA mode` mas você tem AMD | `USE_DIRECTML` não definido | Rode via `rodar.bat` |
 | A imagem gerada não muda nada | Máscara sem canal alfa, ou prompt vazio | Exporte a máscara com transparência; escreva um prompt |
-| `KeyError`/`TypeError` logo na inicialização | Pasta de modelos incompleta ou BrushNet no caminho errado | Conferir a árvore da [seção 5](#5-modelos-de-ia--download-e-instalação) |
+| `KeyError`/`TypeError` logo na inicialização | Pasta de modelos incompleta ou BrushNet no caminho errado | Conferir a árvore da [seção 4](#4-modelos-de-ia--download-e-instalação) |
 | Imagem saiu toda preta | fp16 em GPU AMD | Em DirectML o código já força fp32; se continuar, feche outros programas que usem VRAM |
 | `out of memory` | Resolução/steps altos demais | Reduza Resolution (ex.: 512) e feche jogos/navegador |
 | Erro `0xc0000006` ou "Windows não pode acessar o arquivo …safetensors" | Falha de leitura do **disco** (setor defeituoso/cabo) | Verifique o disco (`chkdsk D: /scan`), SMART e cabo SATA — **não é erro do MagicQuill** |
@@ -522,14 +491,14 @@ de divergência, siga este README.*
 
 ---
 
-## 14. Pontos de atenção (análise estática do código)
+## 13. Pontos de atenção (análise estática do código)
 
 Análise feita sobre o código desta fork, dividida em dois blocos: **correções
 que fizemos aqui** (bugs que já existiam no projeto oficial e foram resolvidos
 neste fork) e **comportamentos herdados do original** (mantidos de propósito —
 reproduzem exatamente o projeto que os autores publicaram).
 
-### 14.1 Correções aplicadas nesta fork (bug do original → resolvido aqui)
+### 13.1 Correções aplicadas nesta fork (bug do original → resolvido aqui)
 
 | Problema que existe no projeto original | O que fizemos aqui |
 |---|---|
@@ -540,7 +509,7 @@ reproduzem exatamente o projeto que os autores publicaram).
 | Código morto: imports sem uso (`subprocess`, `requests`, `io` duplicado), rádio `stroke_as_edge` comentado, argumento `progress` caindo na posição errada de `base_model_version` em `process()` | Removidos (nodes nunca chamados — `PowerPaint`, `CutForInpaint` — e ramos `stroke_as_edge=disable` ficaram, por segurança) |
 | `temp_whl/`, `run_out.log`, `run_err.log` podiam ser versionados por engano | Adicionados ao `.gitignore` |
 
-### 14.2 Comportamentos herdados do projeto original (mantidos — iguais ao oficial)
+### 13.2 Comportamentos herdados do projeto original (mantidos — iguais ao oficial)
 
 - **Erros engolidos pela UI** — por design, a interface não derruba por
   exceção; **sempre olhe o terminal** quando algo falhar.
@@ -554,11 +523,11 @@ reproduzem exatamente o projeto que os autores publicaram).
   a ordem dos imports é frágil (`scribble_color_edit.py` compensa com
   `sys.path.append`).
 - **Porta/host fixos** (`127.0.0.1:7860`) e flags de CLI ignoradas —
-  comportamento documentado na [seção 8](#8-como-rodar).
+  comportamento documentado na [seção 7](#7-como-rodar).
 
 ---
 
-## 15. Licença e citação
+## 14. Licença e citação
 
 ### Licença
 
